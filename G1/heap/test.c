@@ -4,38 +4,60 @@
 int main(int argc, char const *argv[])
 {
     heap heap;
-    char *str1 = "one";
-    char *str2 = "two";
-    char *str3 = "three";
-    char *str4 = "four";
-    char *str5 = "five";
-    char *str6 = "six";
-    char *str7 = "seven";
+
+    int charsize = 8;
+    char* chararray[charsize];
+    chararray[0] = "zero";
+    chararray[1] = "one";
+    chararray[2] = "two";
+    chararray[3] = "three";
+    chararray[4] = "four";
+    chararray[5] = "five";
+    chararray[6] = "six";
+    chararray[7] = "seven";
+
+    int intsize = 5;
+    size_t intarray[intsize];
+    intarray[0] = 123;
+    intarray[1] = 123234;
+    intarray[2] = 11111113;
+    intarray[3] = 87654;
+    intarray[4] = 42;
+
+    int priarray[charsize+intsize];
+    priarray[0] = 5;
+    priarray[1] = 2;
+    priarray[2] = 3;
+    priarray[3] = 6;
+    priarray[4] = 7;
+    priarray[5] = 3;
+    priarray[6] = 3;
+    priarray[7] = 10;
+    //ints from here
+    priarray[8] = 12;
+    priarray[9] = 7;
+    priarray[10] = 16;
+    priarray[11] = 1;
+    priarray[12] = 19;
 
     heap_initialize(&heap);
+    for (int i = 0; i < charsize; i++){
+      heap_insert(&heap, (void *) chararray[i], priarray[i]);
+      printf("top is \"%s\"\n", (char *) heap_top(&heap));
+      printf("size of heap: %zu\n", heap_size(&heap));
+      printf("assigned mem for heap %zu\n",heap.alloc_size/sizeof(node));
+      printf("\n");
+    }
 
-    heap_insert(&heap, (void *) str1, 10);
-    printf("top is \"%s\"\n", (char *) heap_top(&heap));
+    printf("Test For other type (intengers)\n\n");
 
-    heap_insert(&heap, (void *) str2, 0);
-    printf("top is \"%s\"\n", (char *) heap_top(&heap));
-
-    heap_insert(&heap, (void *) str3, 5);
-    printf("top is \"%s\"\n", (char *) heap_top(&heap));
-
-    heap_insert(&heap, (void *) str4, 1);
-    printf("top is \"%s\"\n", (char *) heap_top(&heap));
-
-    heap_insert(&heap, (void *) str5, 107);
-    printf("top is \"%s\"\n", (char *) heap_top(&heap));
-
-    heap_insert(&heap, (void *) str6, 4);
-    printf("top is \"%s\"\n", (char *) heap_top(&heap));
-
-    heap_insert(&heap, (void *) str7, 7);
-    printf("top is \"%s\"\n", (char *) heap_top(&heap));
-
-    printf("size of heap: %zu\n", heap_size(&heap));
+    for (int i = 0 ; i < intsize; i++){
+      heap_insert(&heap, (void *) intarray[i], priarray[i+charsize]);
+      printf("top is \"%zu\"\n", (size_t) heap_top(&heap));
+      printf("size of heap: %zu\n", heap_size(&heap));
+      printf("assigned mem for heap %zu\n",heap.alloc_size/sizeof(node));
+      printf("\n");
+    }
 
     heap_clear(&heap);
 
