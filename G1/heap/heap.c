@@ -8,8 +8,8 @@
 
 void heap_initialize(heap *heap)
 {
-    size_t alloc_size = sizeof(node) * 100;
-    node *root = malloc(sizeof(node) * 100); /* Make space for 100 things. */
+    size_t alloc_size = sizeof(node);
+    node *root = malloc(sizeof(node)); /* Make space for 100 things. */
 
     assert(root != NULL);
 
