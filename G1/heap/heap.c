@@ -48,11 +48,71 @@ void heap_insert(heap *heap, void *thing, int priority)
     heap->size += 1;
     heap->root[pos] = new_node;
 
-    while (pos > 0 && heap->root[PARENT(pos)].priority <
-        heap->root[pos].priority) {
+    //bottom up method
+    while (heap->root[PARENT(pos)].priority < heap->root[pos].priority) {
         exchange(heap->root, pos, PARENT(pos));
         pos = PARENT(pos);
     }
+}
+
+void * heap_pop(heap* heap){
+  void* rthing = heap_top(heap);
+  heap->size -= 1;
+  exchange(heap->root, 0, heap->size - 1);
+  int pos = 0;
+  int run_heapify = 1;
+
+
+
+  while (run_heapify == 1) {
+    int scope = heap->root[      pos ].priority;
+    int right = heap->root[RIGHT(pos)].priority;
+    int left  = heap->root[LEFT (pos)].priority;
+      //Testing if left and right node exist
+      if(LEFT(pos)<=heap->size && RIGHT(pos)<=heap->size){
+          // if both nodes are lower, end iteration
+          if(scope>=left && scope>=right){
+            run_heapify = 0;
+          }
+          //if both are bigger, take biggest
+          else if(scope<right && scope<left){
+              if(left<right){
+                  exchange(heap->root,pos,RIGHT(pos));
+                  pos = RIGHT(pos);
+              }
+              else{
+                  exchange(heap->root,pos,LEFT(pos));
+                  pos = LEFT(pos);
+              }
+          }
+          //take left
+          else if(scope<left){
+              exchange(heap->root,pos,LEFT(pos));
+              pos = LEFT(pos);
+          }
+          //take right
+          else if(scope<right){
+              exchange(heap->root,pos,RIGHT(pos));
+              pos = RIGHT(pos);
+          }
+
+      }
+      else if (LEFT(pos)<=heap->size){
+          if(scope<left){
+              exchange(heap->root,pos,LEFT(pos));
+              pos = LEFT(pos);
+          }
+          else{
+            run_heapify = 0;
+          }
+      }
+      else{
+        run_heapify = 0;
+      }
+  }
+
+
+  return rthing;
 }
 
 /* Help functions. */
@@ -74,10 +134,10 @@ void exchange(node *arr, int index1, int index2)
 // void heap_print(heap *heap)
 // {
 //     int i;
-
+//
 //     for (i = 0; i < heap->size; i++)
 //         printf("%d ", heap->root[i].priority);
-
+//
 //     puts("");
 // }
 

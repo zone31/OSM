@@ -43,21 +43,34 @@ int main(int argc, char const *argv[])
     heap_initialize(&heap);
     for (int i = 0; i < charsize; i++){
       heap_insert(&heap, (void *) chararray[i], priarray[i]);
-      printf("top is \"%s\"\n", (char *) heap_top(&heap));
+      printf("inserted \"%s\" into heap, with priority %u\n",chararray[i],priarray[i]);
+      printf("top is now \"%s\"\n", (char *) heap_top(&heap));
       printf("size of heap: %zu\n", heap_size(&heap));
       printf("assigned mem for heap %zu\n",heap.alloc_size/sizeof(node));
       printf("\n");
     }
+    printf("-------------------------------------------------------------\n");
+    printf("Test For other type (intengers)\n");
+    printf("-------------------------------------------------------------\n\n");
 
-    printf("Test For other type (intengers)\n\n");
-
-    for (int i = 0 ; i < intsize; i++){
+    for (int i = 0; i < intsize; i++){
       heap_insert(&heap, (void *) intarray[i], priarray[i+charsize]);
-      printf("top is \"%zu\"\n", (size_t) heap_top(&heap));
+      printf("inserted %zu into heap, with priority %u\n",intarray[i],priarray[i+charsize]);
+      printf("top is now %zu\n", (size_t) heap_top(&heap));
       printf("size of heap: %zu\n", heap_size(&heap));
       printf("assigned mem for heap %zu\n",heap.alloc_size/sizeof(node));
       printf("\n");
     }
+
+    printf("Returning and removeing top element\n\n");
+
+    printf("Returned top is %zu\n", (size_t) heap_pop(&heap));
+
+    printf("top is now %zu\n", (size_t) heap_top(&heap));
+    printf("size of heap: %zu\n", heap_size(&heap));
+    printf("assigned mem for heap %zu\n",heap.alloc_size/sizeof(node));
+    printf("\n");
+
 
     heap_clear(&heap);
 
