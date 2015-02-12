@@ -57,8 +57,9 @@ void heap_insert(heap *heap, void *thing, int priority)
 
 void * heap_pop(heap* heap){
   void* rthing = heap_top(heap);
+
   heap->size -= 1;
-  exchange(heap->root, 0, heap->size - 1);
+  exchange(heap->root, 0, heap->size);
   int pos = 0;
   int run_heapify = 1;
 
@@ -69,7 +70,7 @@ void * heap_pop(heap* heap){
     int right = heap->root[RIGHT(pos)].priority;
     int left  = heap->root[LEFT (pos)].priority;
       //Testing if left and right node exist
-      if(LEFT(pos)<=heap->size && RIGHT(pos)<=heap->size){
+      if(LEFT(pos)<heap->size && RIGHT(pos)<heap->size){
           // if both nodes are lower, end iteration
           if(scope>=left && scope>=right){
             run_heapify = 0;
@@ -97,7 +98,8 @@ void * heap_pop(heap* heap){
           }
 
       }
-      else if (LEFT(pos)<=heap->size){
+      //only left is accesable
+      else if (LEFT(pos)<heap->size){
           if(scope<left){
               exchange(heap->root,pos,LEFT(pos));
               pos = LEFT(pos);
@@ -106,12 +108,11 @@ void * heap_pop(heap* heap){
             run_heapify = 0;
           }
       }
+      //last node, since no childen
       else{
         run_heapify = 0;
       }
   }
-
-
   return rthing;
 }
 
@@ -131,14 +132,21 @@ void exchange(node *arr, int index1, int index2)
     arr[index2] = temp;
 }
 
-// void heap_print(heap *heap)
-// {
-//     int i;
-//
-//     for (i = 0; i < heap->size; i++)
-//         printf("%d ", heap->root[i].priority);
-//
-//     puts("");
-// }
+void heap_print_char(heap* heap, int level, int pos)
+{
+    if(heap->size!=0){
+      for(int i=0;i<level;i++){
+        printf("  ");
+      }
+      printf("%u %s :%u: \n",
+            heap->root[pos].priority,(char*) heap->root[pos].thing,pos);
+      if(LEFT(pos)<heap->size){
+        heap_print_char(heap,level+1,LEFT(pos));
+      }
+      if(RIGHT(pos)<heap->size){
+        heap_print_char(heap,level+1,RIGHT(pos));
+      }
+    }
+}
 
 #endif
