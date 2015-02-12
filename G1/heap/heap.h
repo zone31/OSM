@@ -31,7 +31,8 @@ void * heap_pop(heap *);
 /* Help functions. */
 void heap_increase_size(heap *heap);
 void exchange(node *arr, int index1, int index2);
+void heapify(heap*,int pos);
 
-/*Pretty print function*/
+/*Pretty print heap*/
 void heap_print_char(heap*, int, int);
 #endif
