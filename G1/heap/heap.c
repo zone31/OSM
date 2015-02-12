@@ -1,7 +1,7 @@
 #ifndef HEAP_C
 #define HEAP_C
 
-#include <stdio.h> /* REMOVE. */
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "heap.h"
@@ -55,61 +55,37 @@ void heap_insert(heap *heap, void *thing, int priority)
     }
 }
 
-void * heap_pop(heap* heap){
-  void* rthing = heap_top(heap);
-  heap->size -= 1;
-  exchange(heap->root, 0, heap->size);
-  int pos = 0;
-  int run_heapify = 1;
-  while (run_heapify == 1) {
-    int scope = heap->root[      pos ].priority;
-    int right = heap->root[RIGHT(pos)].priority;
-    int left  = heap->root[LEFT (pos)].priority;
-      //Testing if left and right node exist
-      if(LEFT(pos)<heap->size && RIGHT(pos)<heap->size){
-          // if both nodes are lower, end iteration
-          if(scope>=left && scope>=right){
-            run_heapify = 0;
-          }
-          //if both are bigger, take biggest
-          else if(scope<right && scope<left){
-              if(left<right){
-                  exchange(heap->root,pos,RIGHT(pos));
-                  pos = RIGHT(pos);
-              }
-              else{
-                  exchange(heap->root,pos,LEFT(pos));
-                  pos = LEFT(pos);
-              }
-          }
-          //take left
-          else if(scope<left){
-              exchange(heap->root,pos,LEFT(pos));
-              pos = LEFT(pos);
-          }
-          //take right
-          else if(scope<right){
-              exchange(heap->root,pos,RIGHT(pos));
-              pos = RIGHT(pos);
-          }
+void max_heapify(heap *heap, int i)
+{
+    int size = heap->size;
+    int l = LEFT(i);
+    int r = RIGHT(i);
+    int larg;
+    node *root = heap->root;
 
-      }
-      //only left is accesable
-      else if (LEFT(pos)<heap->size){
-          if(scope<left){
-              exchange(heap->root,pos,LEFT(pos));
-              pos = LEFT(pos);
-          }
-          else{
-            run_heapify = 0;
-          }
-      }
-      //last node, since no childen
-      else{
-        run_heapify = 0;
-      }
-  }
-  return rthing;
+    larg = (l <= size-1 && root[l].priority > root[i].priority) ? l : i;
+    larg = (r <= size-1 && root[r].priority > root[larg].priority) ? r : larg;
+
+    if (larg != i) {
+        exchange(root, i, larg);
+        max_heapify(heap, larg);
+    }
+}
+
+void * heap_pop(heap *heap)
+{
+    void *max;
+
+    if (heap->size < 1)
+        return NULL;
+
+    max = heap->root->thing;                  /* Top element in the array. */
+    *heap->root = heap->root[heap->size - 1]; /* Move last node to the front. */
+    heap->size--;
+
+    max_heapify(heap, 0);
+
+    return max;
 }
 
 /* Help functions. */
@@ -130,18 +106,20 @@ void exchange(node *arr, int index1, int index2)
 
 void heap_print_char(heap* heap, int level, int pos)
 {
-    if(heap->size!=0){
-      for(int i=0;i<level;i++){
-        printf("  ");
-      }
-      printf("%u %s :%u: \n",
-            heap->root[pos].priority,(char*) heap->root[pos].thing,pos);
-      if(LEFT(pos)<heap->size){
-        heap_print_char(heap,level+1,LEFT(pos));
-      }
-      if(RIGHT(pos)<heap->size){
-        heap_print_char(heap,level+1,RIGHT(pos));
-      }
+    int i;
+
+    if (heap->size!=0) {
+        for (i = 0; i < level; i++)
+            printf("  ");
+
+        printf("%u %s :%u: \n",
+        heap->root[pos].priority, (char *) heap->root[pos].thing, pos);
+
+        if (LEFT(pos)<heap->size)
+            heap_print_char(heap, level+1, LEFT(pos));
+
+        if (RIGHT(pos)<heap->size)
+            heap_print_char(heap, level+1, RIGHT(pos));
     }
 }
 
