@@ -58,8 +58,9 @@ void heap_insert(heap *heap, void *thing, int priority)
 void * heap_pop(heap* heap){
   void* rthing = heap_top(heap);
   heap->size -= 1;
+  exchange(heap->root, 0, heap->size);
   heapify(heap,0);
-  // exchange(heap->root, 0, heap->size);
+
   // int pos = 0;
   // int run_heapify = 1;
   // while (run_heapify == 1) {
