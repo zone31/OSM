@@ -1,7 +1,7 @@
 #ifndef HEAP_C
 #define HEAP_C
 
-#include <stdio.h> /* REMOVE. */
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "heap.h"
@@ -160,18 +160,20 @@ void exchange(node *arr, int index1, int index2)
 
 void heap_print_char(heap* heap, int level, int pos)
 {
-    if(heap->size!=0){
-      for(int i=0;i<level;i++){
-        printf("  ");
-      }
-      printf("%u %s :%u: \n",
-            heap->root[pos].priority,(char*) heap->root[pos].thing,pos);
-      if(LEFT(pos)<heap->size){
-        heap_print_char(heap,level+1,LEFT(pos));
-      }
-      if(RIGHT(pos)<heap->size){
-        heap_print_char(heap,level+1,RIGHT(pos));
-      }
+    int i;
+
+    if (heap->size!=0) {
+        for (i = 0; i < level; i++)
+            printf("  ");
+
+        printf("%u %s :%u: \n",
+        heap->root[pos].priority, (char *) heap->root[pos].thing, pos);
+
+        if (LEFT(pos)<heap->size)
+            heap_print_char(heap, level+1, LEFT(pos));
+
+        if (RIGHT(pos)<heap->size)
+            heap_print_char(heap, level+1, RIGHT(pos));
     }
 }
 
