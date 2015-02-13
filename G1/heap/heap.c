@@ -60,57 +60,6 @@ void * heap_pop(heap* heap){
   heap->size -= 1;
   exchange(heap->root, 0, heap->size);
   heapify(heap,0);
-
-  // int pos = 0;
-  // int run_heapify = 1;
-  // while (run_heapify == 1) {
-  //   int scope = heap->root[      pos ].priority;
-  //   int right = heap->root[RIGHT(pos)].priority;
-  //   int left  = heap->root[LEFT (pos)].priority;
-  //     //Testing if left and right node exist
-  //     if(LEFT(pos)<heap->size && RIGHT(pos)<heap->size){
-  //         // if both nodes are lower, end iteration
-  //         if(scope>=left && scope>=right){
-  //           run_heapify = 0;
-  //         }
-  //         //if both are bigger, take biggest
-  //         else if(scope<right && scope<left){
-  //             if(left<right){
-  //                 exchange(heap->root,pos,RIGHT(pos));
-  //                 pos = RIGHT(pos);
-  //             }
-  //             else{
-  //                 exchange(heap->root,pos,LEFT(pos));
-  //                 pos = LEFT(pos);
-  //             }
-  //         }
-  //         //take left
-  //         else if(scope<left){
-  //             exchange(heap->root,pos,LEFT(pos));
-  //             pos = LEFT(pos);
-  //         }
-  //         //take right
-  //         else if(scope<right){
-  //             exchange(heap->root,pos,RIGHT(pos));
-  //             pos = RIGHT(pos);
-  //         }
-  //
-  //     }
-  //     //only left is accesable
-  //     else if (LEFT(pos)<heap->size){
-  //         if(scope<left){
-  //             exchange(heap->root,pos,LEFT(pos));
-  //             pos = LEFT(pos);
-  //         }
-  //         else{
-  //           run_heapify = 0;
-  //         }
-  //     }
-  //     //last node, since no childen
-  //     else{
-  //       run_heapify = 0;
-  //     }
-  //}
   return rthing;
 }
 
