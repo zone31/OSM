@@ -39,6 +39,8 @@
 #include "kernel/panic.h"
 #include "lib/libc.h"
 #include "kernel/assert.h"
+#include "drivers/device.h"
+#include "kernel/IO.h"
 
 /**
  * Handle system calls. Interrupts are enabled when this function is
@@ -58,11 +60,26 @@ void syscall_handle(context_t *user_context)
      * returning from this function the userland context will be
      * restored from user_context.
      */
-    switch(user_context->cpu_regs[MIPS_REGISTER_A0]) {
+
+    switch (user_context->cpu_regs[MIPS_REGISTER_A0]) {
     case SYSCALL_HALT:
         halt_kernel();
         break;
-    default: 
+    case SYSCALL_READ:
+        user_context->cpu_regs[MIPS_REGISTER_V0] = syscall_read(
+            (int) user_context->cpu_regs[MIPS_REGISTER_A1],
+            (void *) user_context->cpu_regs[MIPS_REGISTER_A2],
+            (int) user_context->cpu_regs[MIPS_REGISTER_A3]);
+
+        break;
+    case SYSCALL_WRITE:
+        user_context->cpu_regs[MIPS_REGISTER_V0] = syscall_write(
+            (int) user_context->cpu_regs[MIPS_REGISTER_A1],
+            (void const *) user_context->cpu_regs[MIPS_REGISTER_A2],
+            (int) user_context->cpu_regs[MIPS_REGISTER_A3]);
+
+        break;
+    default:
         KERNEL_PANIC("Unhandled system call\n");
     }
 
