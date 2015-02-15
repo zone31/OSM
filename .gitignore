@@ -5,3 +5,8 @@ report.aux
 report.out
 report.toc
 report.synctex.gz
+buenos
+*.map
+tfstool
+readwrite
+halt
