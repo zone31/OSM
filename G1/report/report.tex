@@ -23,7 +23,6 @@
   xleftmargin=\parindent,
   language=C,
   showstringspaces=false,
-  basicstyle=\footnotesize\ttfamily,
   keywordstyle=\bfseries\color{green!40!black},
   morekeywords={size_t,node,heap},
   commentstyle=\itshape\color{purple!40!black},
@@ -80,61 +79,113 @@ numbers=none}
     \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
 \section*{Task 1 - A priority queue}
-\subsection*{Assumptions}
-\begin{itemize}
-\item \begin{lstlisting}[style=customc] 
+
+\begin{lstlisting}[style=customc] 
 typedef struct{
   void* thing;
   int priority;
 }node;
-\end{lstlisting} 
+\end{lstlisting}
+
+\textit{Description}\\
 A node containing elements needed for the priority queue. The heap will be build 
 upon this type. thing contains a pointer to the element queued, and priority 
-contains an integer. The higher value, the higher priority.
+contains an integer. The higher value, the higher priority.\\
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test
 
 
-\item \begin{lstlisting}[style=customc] 
+
+\begin{lstlisting}[style=customc] 
 typedef struct{
   node* root;
   size_t size;
   size_t alloc_size;
 }heap;
 \end{lstlisting} 
-The heap type.
+\textit{Description}\\
+The heap type.\\
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test
 
 
-\item \begin{lstlisting}[style=customc] 
-void heap_initialize(heap*);\end{lstlisting} 
+ \begin{lstlisting}[style=customc] 
+void heap_initialize(heap*);\end{lstlisting}
+
+\textit{Description}\\
 Setting up the node, memory assigning with malloc for one node element, and setting
-the size variable of the heap type to 0.
+the size variable of the heap type to 0.\\
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test\\
 
 
-\item \begin{lstlisting}[style=customc] 
+
+
+
+\begin{lstlisting}[style=customc] 
 void heap_clear(heap*); \end{lstlisting} 
-test
+\textit{Description}\\
+Freeing up the assigned memory, and resetting the heap object by calling initialize again.\\
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test
 
 
-\item \begin{lstlisting}[style=customc] 
+
+ \begin{lstlisting}[style=customc] 
 size_t heap_size(heap*);\end{lstlisting} 
-test
+
+\textit{Description}\\
+Returning the amount of elements in the heap. (stored under size in the heap type).\\
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test
 
 
-\item \begin{lstlisting}[style=customc] 
-void* heap_top(heap*);\end{lstlisting} 
-test
 
 
-\item \begin{lstlisting}[style=customc] 
+
+ \begin{lstlisting}[style=customc] 
+void* heap_top(heap*);\end{lstlisting}
+
+\textit{Description}\\
+Since this function had a void* type instead of a node*, we assumed that only the void* thing was wanted for return, and not the whole node element. Since the heap structure is maximized, the return will always be the first element of the root array.\\
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test
+
+ 
+
+
+ \begin{lstlisting}[style=customc] 
 void heap_insert(heap*,void*,int); \end{lstlisting} 
-test
 
-\item \begin{lstlisting}[style=customc] 
-void* heap_pop(heap*);\end{lstlisting} 
-test
+\textit{Description}\\
+Inserts an element into the heap. The function arguments is an void pointer for the thing in the node type, and an intenger for the priority.\\ 
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test
 
 
-\end{itemize}
-\subsection*{Running time}
-    
-   
+ \begin{lstlisting}[style=customc] 
+void* heap_pop(heap*);\end{lstlisting}
+
+\textit{Description}\\
+Returns the first element in the heap, and max heapifys them.\\ 
+\textit{Assumptions}\\
+Test\\
+\textit{Running time}\\
+Test
+
+  
 \end{document}
