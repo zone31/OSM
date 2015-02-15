@@ -1,0 +1,137 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+\usepackage{graphicx} % \includegraphics
+\usepackage{fancyhdr, amsmath, amssymb, comment, caption, placeins, subfigure,
+    fixltx2e, changepage, listings, courier, soul, hyperref, geometry,
+    enumerate, listings, enumitem}
+
+
+\author{\Large{Magnus N\o rskov Stavngaard} \\
+		\texttt{magnus@stavngaard.dk}
+		\\\\
+		\Large{Mark Jan Jacobi} \\
+        \texttt{mark@jacobi.pm}
+		 \\\\
+		\Large{Mads Ynddal} \\
+		\texttt{template@russianwomanlookingforyou.ru}
+}
+
+\lstdefinestyle{customc}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  morekeywords={size_t,node,heap},
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{orange},
+}
+
+\lstset{
+basicstyle=\footnotesize,
+language=C,
+numbers=none}
+
+\title{
+    \vspace{3cm}
+    \Huge{OSM} \\
+    \Large{G1}
+}
+
+\pagestyle{fancy}
+\lhead{\small{Magnus S. Mark J. Mads Y.}}
+\chead{\date{\today}}
+\rhead{University of Copenhagen}
+% \lfoot{}
+% \cfoot{}
+% \rfoot{}
+
+% Change indent length of paragraph not after a header.
+\setlength{\parindent}{0cm}
+
+% Remove page numbering in the beginning
+\pagenumbering{gobble}
+
+\begin{document}
+    %% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+    %% `natbio-farve` to use SCIENCE's new colors and logo.
+    \AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]
+        {include/ku-farve}}}
+    \AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]
+        {include/ku-farve}}}
+
+    %% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+    \AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
+
+    \clearpage
+    \maketitle
+    \thispagestyle{empty}
+
+    \newpage
+
+    %\tableofcontents
+
+    %\newpage
+
+    \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
+
+\section*{Task 1 - A priority queue}
+\subsection*{Assumptions}
+\begin{itemize}
+\item \begin{lstlisting}[style=customc] 
+typedef struct{
+  void* thing;
+  int priority;
+}node;
+\end{lstlisting} 
+A node containing elements needed for the priority quene. The heap will be build 
+upon this type
+
+\item \begin{lstlisting}[style=customc] 
+typedef struct{
+  node* root;
+  size_t size;
+  size_t alloc_size;
+}heap;
+\end{lstlisting} 
+test
+
+
+\item \begin{lstlisting}[style=customc] 
+void heap_initialize(heap*);\end{lstlisting} 
+test
+
+
+\item \begin{lstlisting}[style=customc] 
+void heap_clear(heap*); \end{lstlisting} 
+test
+
+
+\item \begin{lstlisting}[style=customc] 
+size_t heap_size(heap*);\end{lstlisting} 
+test
+
+
+\item \begin{lstlisting}[style=customc] 
+void* heap_top(heap*);\end{lstlisting} 
+test
+
+
+\item \begin{lstlisting}[style=customc] 
+void heap_insert(heap*,void*,int); \end{lstlisting} 
+test
+
+\item \begin{lstlisting}[style=customc] 
+void* heap_pop(heap*);\end{lstlisting} 
+test
+
+
+\end{itemize}
+\subsection*{Running time}
+    
+   
+\end{document}
