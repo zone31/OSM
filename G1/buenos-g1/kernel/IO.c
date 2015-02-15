@@ -12,15 +12,19 @@ int syscall_read(int fhandle, void *buffer, int length)
     device_t *dev;
     gcd_t *gcd;
 
+    // Vi vil kun bruge STDIN på nuværende tidspunkt
     if (fhandle != FILEHANDLE_STDIN)
         return -1;
 
+    // Opret en device handle til TTY
     dev = device_get(YAMS_TYPECODE_TTY, 0);
     KERNEL_ASSERT(dev != NULL);
 
+    // Opret generic character device ud fra dev
     gcd = (gcd_t *) dev->generic_device;
     KERNEL_ASSERT(gcd != NULL);
 
+    // Skriv til TTY med read metoden
     return gcd->read(gcd, buffer, length);
 }
 
