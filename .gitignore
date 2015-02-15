@@ -4,6 +4,8 @@ report.pdf
 report.aux
 report.out
 report.toc
+missfont.log
+report.log
 report.synctex.gz
 buenos
 *.map
