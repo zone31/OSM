@@ -88,8 +88,10 @@ typedef struct{
   int priority;
 }node;
 \end{lstlisting} 
-A node containing elements needed for the priority quene. The heap will be build 
-upon this type
+A node containing elements needed for the priority queue. The heap will be build 
+upon this type. thing contains a pointer to the element queued, and priority 
+contains an integer. The higher value, the higher priority.
+
 
 \item \begin{lstlisting}[style=customc] 
 typedef struct{
@@ -98,12 +100,13 @@ typedef struct{
   size_t alloc_size;
 }heap;
 \end{lstlisting} 
-test
+The heap type.
 
 
 \item \begin{lstlisting}[style=customc] 
 void heap_initialize(heap*);\end{lstlisting} 
-test
+Setting up the node, memory assigning with malloc for one node element, and setting
+the size variable of the heap type to 0.
 
 
 \item \begin{lstlisting}[style=customc] 

@@ -9,7 +9,7 @@
 void heap_initialize(heap *heap)
 {
     size_t alloc_size = sizeof(node);
-    node *root = malloc(sizeof(node)); /* Make space for 100 things. */
+    node *root = malloc(sizeof(node));
 
     assert(root != NULL);
 
@@ -21,6 +21,7 @@ void heap_initialize(heap *heap)
 void heap_clear(heap *heap)
 {
     free(heap->root);
+    heap_initialize(heap);
 }
 
 size_t heap_size(heap *heap)
