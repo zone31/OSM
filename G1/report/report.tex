@@ -94,114 +94,144 @@ numbers=none}
 
     \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
-\section*{Task 1 - A priority queue}
-\subsection*{Function desciption and assumtions}
-\begin{lstlisting}[style=customc]
-typedef struct{
-  void* thing;
-  int priority;
-}node;
-\end{lstlisting}
+\section*{Task 1 - A Priority Queue}
+We were asked to implement a heap priority queue in the programming language C.
+The heap should handle any kind of data and should hold as many elements as the
+user wants.  This means that the heap should expand when needed and use void
+pointers to save elements on the heap.
 
-\textit{Description}\\
-A node containing elements needed for the priority queue. The heap will be build
-upon this type. thing contains a pointer to the element queued, and priority
-contains an integer. The higher value, the higher priority.\\
-\textit{Assumptions}\\
-We assumed that the higher priority, the higher the value of int priority\\
-
+\subsection*{Function Description and Assumptions}
+The heap is represented with this structure,
 
 \begin{lstlisting}[style=customc]
-typedef struct{
-  node* root;
+typedef struct {
+  node *root;
   size_t size;
   size_t alloc_size;
-}heap;
+} heap;
+\end{lstlisting}
+
+\textit{Description} \\
+The heap contains an array of node pointers, the size of the heap in number of
+elements, and the size of the allocated space in bytes. \\
+\textit{Assumptions} \\
+We assumed that root is an array. \\
+
+A node in the array in the heap is represented by the struct,
+
+\begin{lstlisting}[style=customc]
+typedef struct {
+  void *thing;
+  int priority;
+} node;
+\end{lstlisting}
+
+\textit{Description}\\
+The void pointer "thing" is a pointer to the element queued, and the integer
+priority contains the priority of a given node.  The higher the value, the
+higher priority. \\
+\textit{Assumptions}\\
+We assumed we were building a max-heap which is why a greater numerical value of
+priority is assumed to correspond to a higher priority. \\
+
+\begin{lstlisting}[style=customc]
+void heap_initialize(heap *);
+\end{lstlisting}
+\textit{Description} \\
+This function initializes the heap, malloc is called to allocate space for the
+nodes and the length of the heap and the allocated length is set.
+
+\begin{lstlisting}[style=customc]
+void heap_clear(heap *);
 \end{lstlisting}
 \textit{Description}\\
-The heap type. Containing an array of node pointers, and a size value, and an size value for the allocated space.\\
-\textit{Assumptions}\\
-We assumed that root is an array.\\
-
-
+Frees the space used to store the nodes in the heap, so when the struct goes out
+of scope, no memory is associated with the heap anymore.
 
 \begin{lstlisting}[style=customc]
-void heap_initialize(heap*);\end{lstlisting}
+size_t heap_size(heap *);
+\end{lstlisting}
+
 \textit{Description}\\
-Setting up the node, memory assigning with malloc for one node element, and setting
-the size variable of the heap type to 0.\\
-
-
-
-
-
-
+Returns the amount of elements in the heap. (stored under size in the heap
+structure). \\
 
 \begin{lstlisting}[style=customc]
-void heap_clear(heap*); \end{lstlisting}
-\textit{Description}\\
-Freeing up the assigned memory, and resetting the heap object by calling initialize again.\\
+void * heap_top(heap *);
+\end{lstlisting}
 
-
-
-
- \begin{lstlisting}[style=customc]
-size_t heap_size(heap*);\end{lstlisting}
-
-\textit{Description}\\
-Returning the amount of elements in the heap. (stored under size in the heap type).\\
-
-
-
-
- \begin{lstlisting}[style=customc]
-void* heap_top(heap*);\end{lstlisting}
-
-\textit{Description}\\
+\textit{Description} \\
 Returns the pointer for the thing in the highest priority node.
 \textit{Assumptions}\\
-Since this function had a void* type instead of a node*, we assumed that only the void* thing was wanted for return, and not the whole node element. Since the heap structure is maximized, the return will always be the first element of the root array.\\
-
-
-\begin{lstlisting}[style=customc]
-void heap_insert(heap*,void*,int); \end{lstlisting}
-\textit{Description}\\
-Inserts an element into the heap. The function arguments is an void pointer for the thing in the node type, and an intenger for the priority.\\
-
-
+Since this function had a void pointer return type instead of a node pointer, we
+assumed that only the void pointer "thing" was wanted for return, and not the
+whole node element.  We simply return the first element in the array since the
+heap property dictates that that is where the highest priority element is. \\
 
 \begin{lstlisting}[style=customc]
-void* heap_pop(heap*);\end{lstlisting}
+void heap_insert(heap *, void *, int);
+\end{lstlisting}
 \textit{Description}\\
-Returns the first element in the heap, and max heapifys them.\\
+Inserts an element into the heap.  The function arguments is a heap pointer, a
+void pointer for the thing in the node type, and an integer for the priority. \\
+
+\begin{lstlisting}[style=customc]
+void * heap_pop(heap *);
+\end{lstlisting}
+\textit{Description}\\
+Returns the a void pointer to the element in the heap with the highest priority.
+The returned element is removed from the heap, and the heap is updated so the
+next highest priority element is now on top.
 \textit{Assumptions}\\
-Again, we assume that the returned pointer is not the node element, but the pointer for the thing in the node type.\\
+Again, we assume that the returned pointer is not the node element, but the
+pointer for the thing in the node type. \\
 
 \subsection*{Running time and algorithm}
-For most of the functions, the running time is constant, in these functions, we do not iterate over the elements, or in some way make the code dependent of the size of the heap. therefore it is constant. We also assume that malloc space allocation is not time dependent of the size allocated.
-\\
-The functions of interest is heap\_insert and heap\_pop. these have $log(n)$ running times, since we need to maximize the heap, when we add or subtract elements.
+For most of the functions, the running time is constant, in these functions, we
+do not iterate over the elements, or in some way make the code independent on
+the size of the heap. therefore it is constant. We also assume that malloc space
+allocation is not time dependent of the size allocated. \\
+The functions of interest is heap\_insert and heap\_pop. these have $O(log n)$
+running times.
+
 \subsubsection*{heap\_insert}
-heap\_insert uses to bottom to top heapify. When an element is inserted, it will be at the very end of the node array. From there, it will be compared to its parent node, if the parent node have a lower priority, the algorithm will flip their 
-position in the heap, and run the same process again, with focus on the same node, but at its new position. The algorithm stops if the parent node is bigger, or if the node becomes the top node.
+heap\_insert uses to bottom to top heapify. When an element is inserted, it will
+be at the very end of the node array.  From there, it will be compared to its
+parent node, if the parent node have a lower priority, the algorithm will flip
+their position in the heap, and run the same process again, with focus on the
+same node, but at its new position.  The algorithm stops if the parent node is
+bigger, or if the node becomes the top node.
+
 \subsubsection*{heap\_pop}
-heap\_pop uses top to bottom heapify. First the top element is returned, then it is flipped with the end element in the array, and the size of the array is lowered by one. We could just copy the last element to the first one instead of flipping them, but for simplicity we flip them like the insert algorithm.\\
-When the flip has occurred, we focus on the root node of the array. We then look
-at the nodes children. If They exist, we check if they are bigger. If both are bigger, we flip with the biggest one. This algorithm runs until the nodes underneath is smaller, or non existent.
-
-
+heap\_pop uses top to bottom heapify.  First the top element is returned, then
+it is flipped with the end element in the array, and the size of the array is
+lowered by one. We could just copy the last element to the first one instead of
+flipping them, but for simplicity we flip them like the insert algorithm. \\
+When the flip has occurred, we focus on the root node of the array.  We then
+look at the nodes children.  If They exist, we check if they are bigger.  If
+both are bigger, we flip with the biggest one.  This algorithm runs until the
+nodes underneath is smaller, or non existent.
 
 \section*{Task 2 - syscall read/write}
+In this assignment we were asked to implement read and write to standard in and
+out for the Buenos operating system. \\
 
-syscall\_read og syscall\_write blev skrevet med udgangspunkt i init\_startup\_fallback fra init/main.c. Implementeringen understøtter at læse fra og skrive til STDIN og STDOUT, men burde nemt kunne udvides ved at bruge fhandle argumentet.
+Our implementation of \textit{syscall\_read} and \textit{syscall\_write} was
+written inspired by the code in \textit{init\_startup\_fallback} from
+\textit{init/main.c}.  The implementation should be easily expandable to be able
+to read and write using the filehandle argument given to the read and write
+functions.
 
-I syscall.h er funktionsnumrene allerede definreret for read og write.
+In \textit{syscall.h} the syscall numbers are already defined for the read and
+write function as,
+
 \begin{lstlisting}[style=customc]
-#define SYSCALL\_READ 0x204
+#define SYSCALL\_READ  0x204
 #define SYSCALL\_WRITE 0x205
 \end{lstlisting}
 
-Så derfor kan man gå direkte til at tilføje en case for hver af dem i syscall.c
+Therefore we created a case for these system calls in the file
+\textit{syscall.c}.
 
 \begin{lstlisting}[style=customc]
 switch (user_context->cpu_regs[MIPS_REGISTER_A0]) {
@@ -231,15 +261,21 @@ switch (user_context->cpu_regs[MIPS_REGISTER_A0]) {
 }
 \end{lstlisting}
 
-De to cases kalder funktioner i filen IO.c som klarer det hele. I syscall.c
-sørges blot for at sende argumenterne videre og assigne resultatet til $v0$
-registeret.
+The syscall number is saved in the MIPS register A0, therefore a switch is
+performed on these system calls so we handle the correct system call.  The
+arguments to the read and write functions can be found in the MIPS registers
+A1, A2 and A3, and the return value of the function should be saved in the MIPS
+register V0.  The only thing done in the \textit{syscall.c} file is casting the
+arguments to the correct types and saving the result of the function call the V0
+register.
 
-I IO.c initialiserer syscall\_read ved kun at acceptere STDIN (for simplificering)
-og opretter en device handler for TTY, som vi kan bruge til at få en GCD. Denne
-Generic Character Device kan bruges til at skrive til, og læse fra, TTY. Nedenfor
-er syscall\_read vist med \emph{gcd->read()} til sidst. syscall\_write er magen til,
-blot med \emph{gcd->write()} til sidst.
+In \textit{IO.c} we initialize read by accepting only reading from standard in
+(for simplicity) if a user try and read from anywhere else $-1$ is returned to
+signify an error.  After this we create a device handler for TTY which we can
+use to get a GCD, Generic Character Device which we use to read and write from a
+TTY.  For this we simply use the already defined \emph{gcd->read()} and
+\emph{gcd->write()} functions.  Below this we show our implementation of read,
+the write implementation is almost the same.
 
 \begin{lstlisting}[style=customc]
 int syscall_read(int fhandle, void *buffer, int length)
@@ -261,6 +297,29 @@ int syscall_read(int fhandle, void *buffer, int length)
 
     // Skriv til TTY med read metoden
     return gcd->read(gcd, buffer, length);
+}
+\end{lstlisting}
+
+We were also asked to test our implementation, we do that with a short test file
+in the tests folder called \textit{readwrite.c}.
+
+\begin{lstlisting}[style=customc]
+#include "tests/lib.h"
+#include "proc/syscall.h"
+
+int main(void)
+{
+    char buffer[128];
+
+    syscall_write(FILEHANDLE_STDOUT, "Hi, press a key!\n", 18);
+    syscall_read(FILEHANDLE_STDIN, buffer, 127);
+    syscall_write(FILEHANDLE_STDOUT, "Pressed button was, ", 21);
+    syscall_write(FILEHANDLE_STDOUT, buffer, 128);
+    syscall_write(FILEHANDLE_STDOUT, "\n", 1);
+
+    syscall_halt();
+
+    return 0;
 }
 \end{lstlisting}
 
