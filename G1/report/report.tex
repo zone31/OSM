@@ -79,8 +79,8 @@ numbers=none}
     \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
 \section*{Task 1 - A priority queue}
-
-\begin{lstlisting}[style=customc] 
+\subsection*{Function desciption and assumtions}
+\begin{lstlisting}[style=customc]
 typedef struct{
   void* thing;
   int priority;
@@ -88,114 +88,96 @@ typedef struct{
 \end{lstlisting}
 
 \textit{Description}\\
-A node containing elements needed for the priority queue. The heap will be build 
-upon this type. thing contains a pointer to the element queued, and priority 
+A node containing elements needed for the priority queue. The heap will be build
+upon this type. thing contains a pointer to the element queued, and priority
 contains an integer. The higher value, the higher priority.\\
 \textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test
+We assumed that the higher priority, the higher the value of int priority\\
 
 
-
-\begin{lstlisting}[style=customc] 
+\begin{lstlisting}[style=customc]
 typedef struct{
   node* root;
   size_t size;
   size_t alloc_size;
 }heap;
-\end{lstlisting} 
+\end{lstlisting}
 \textit{Description}\\
-The heap type.\\
+The heap type. Containing an array of node pointers, and a size value, and an size value for the allocated space.\\
 \textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test
+We assumed that root is an array.\\
 
 
- \begin{lstlisting}[style=customc] 
+
+\begin{lstlisting}[style=customc]
 void heap_initialize(heap*);\end{lstlisting}
-
 \textit{Description}\\
 Setting up the node, memory assigning with malloc for one node element, and setting
 the size variable of the heap type to 0.\\
-\textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test\\
 
 
 
 
 
-\begin{lstlisting}[style=customc] 
-void heap_clear(heap*); \end{lstlisting} 
+
+
+\begin{lstlisting}[style=customc]
+void heap_clear(heap*); \end{lstlisting}
 \textit{Description}\\
 Freeing up the assigned memory, and resetting the heap object by calling initialize again.\\
-\textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test
 
 
 
- \begin{lstlisting}[style=customc] 
-size_t heap_size(heap*);\end{lstlisting} 
+
+ \begin{lstlisting}[style=customc]
+size_t heap_size(heap*);\end{lstlisting}
 
 \textit{Description}\\
 Returning the amount of elements in the heap. (stored under size in the heap type).\\
-\textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test
 
 
 
 
-
- \begin{lstlisting}[style=customc] 
+ \begin{lstlisting}[style=customc]
 void* heap_top(heap*);\end{lstlisting}
 
 \textit{Description}\\
+Returns the pointer for the thing in the highest priority node.
+\textit{Assumptions}\\
 Since this function had a void* type instead of a node*, we assumed that only the void* thing was wanted for return, and not the whole node element. Since the heap structure is maximized, the return will always be the first element of the root array.\\
-\textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test
-
- 
 
 
- \begin{lstlisting}[style=customc] 
-void heap_insert(heap*,void*,int); \end{lstlisting} 
-
+\begin{lstlisting}[style=customc]
+void heap_insert(heap*,void*,int); \end{lstlisting}
 \textit{Description}\\
-Inserts an element into the heap. The function arguments is an void pointer for the thing in the node type, and an intenger for the priority.\\ 
-\textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test
+Inserts an element into the heap. The function arguments is an void pointer for the thing in the node type, and an intenger for the priority.\\
 
 
- \begin{lstlisting}[style=customc] 
+
+\begin{lstlisting}[style=customc]
 void* heap_pop(heap*);\end{lstlisting}
-
 \textit{Description}\\
-Returns the first element in the heap, and max heapifys them.\\ 
+Returns the first element in the heap, and max heapifys them.\\
 \textit{Assumptions}\\
-Test\\
-\textit{Running time}\\
-Test
+Again, we assume that the returned pointer is not the node element, but the pointer for the thing in the node type.\\
+
+\subsection{Running time}
+For most of the functions, the running time is constant, in these functions, we do not iterate over the elements, or in some way make the code dependent of the size of the heap. therefore it is constant. We also assume that malloc space allocation is not time dependent of the size allocated.
+\\
+The functions of interest is heap\_insert and heap\_pop. these have $log(n)$ running times, since we need to maximize the heap, when we add or subtract elements.
+\\ \\
+heap\_insert uses to bottom to top heapyfi
+
 
 \section*{Task 2 - syscall read/write}
 
-syscall_read og syscall_write blev skrevet med udgangspunkt i init_startup_fallback fra init/main.c. Implementeringen understøtter at læse fra og skrive til STDIN og STDOUT, men burde nemt kunne udvides ved at bruge fhandle argumentet.
+syscall\_read og syscall\_write blev skrevet med udgangspunkt i init\_startup\_fallback fra init/main.c. Implementeringen understøtter at læse fra og skrive til STDIN og STDOUT, men burde nemt kunne udvides ved at bruge fhandle argumentet.
 
 I syscall.h er funktionsnumrene allerede definreret for read og write.
 \begin{lstlisting}[style=customc]
-#define SYSCALL_READ 0x204
-#define SYSCALL_WRITE 0x205
-\end{lstlisting} 
+#define SYSCALL\_READ 0x204
+#define SYSCALL\_WRITE 0x205
+\end{lstlisting}
 
 Så derfor kan man gå direkte til at tilføje en case for hver af dem i syscall.c
 
@@ -231,10 +213,10 @@ De to cases kalder funktioner i filen IO.c som klarer det hele. I syscall.c
 sørges blot for at sende argumenterne videre og assigne resultatet til $v0$
 registeret.
 
-I IO.c initialiserer syscall_read ved kun at acceptere STDIN (for simplificering)
-og opretter en device handler for TTY, som vi kan bruge til at få en GCD. Denne 
+I IO.c initialiserer syscall\_read ved kun at acceptere STDIN (for simplificering)
+og opretter en device handler for TTY, som vi kan bruge til at få en GCD. Denne
 Generic Character Device kan bruges til at skrive til, og læse fra, TTY. Nedenfor
-er syscall_read vist med \emph{gcd->read()} til sidst. syscall_write er magen til,
+er syscall\_read vist med \emph{gcd->read()} til sidst. syscall\_write er magen til,
 blot med \emph{gcd->write()} til sidst.
 
 \begin{lstlisting}[style=customc]
