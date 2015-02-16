@@ -21,7 +21,6 @@ void heap_initialize(heap *heap)
 void heap_clear(heap *heap)
 {
     free(heap->root);
-    heap_initialize(heap);
 }
 
 size_t heap_size(heap *heap)
@@ -49,22 +48,23 @@ void heap_insert(heap *heap, void *thing, int priority)
     heap->size += 1;
     heap->root[pos] = new_node;
 
-    //bottom up method
+    /* Bottom up method. */
     while (heap->root[PARENT(pos)].priority < heap->root[pos].priority) {
         exchange(heap->root, pos, PARENT(pos));
         pos = PARENT(pos);
     }
 }
 
-void * heap_pop(heap* heap){
-  void* rthing = heap_top(heap);
-  heap->size -= 1;
-  exchange(heap->root, 0, heap->size);
-  heapify(heap,0);
-  return rthing;
+void * heap_pop(heap *heap)
+{
+    void *top = heap_top(heap);
+
+    heap->size -= 1;
+    exchange(heap->root, 0, heap->size);
+    heapify(heap,0);
+
+    return top;
 }
-
-
 
 /* Help functions. */
 void heap_increase_size(heap *heap)
@@ -74,28 +74,32 @@ void heap_increase_size(heap *heap)
     assert(realloc(heap->root, heap->alloc_size) != NULL);
 }
 
-void heapify(heap* heap,int this){
+void heapify(heap *heap, int this)
+{
     int right   = RIGHT(this);
     int left    = LEFT (this);
-    int this_p  = heap->root[this ].priority;
+    int this_p  = heap->root[this].priority;
     int right_p = heap->root[right].priority;
-    int left_p  = heap->root[left ].priority;
+    int left_p  = heap->root[left].priority;
     int mover   = NULL;
     int mover_p = NULL;
-    // if left exist, set as move target
-    if (left <  heap->size){
-      mover_p = left_p;
-      mover   = left;
+
+    /* If left exist, set as move target. */
+    if (left < heap->size) {
+        mover_p = left_p;
+        mover   = left;
     }
-    // if right exist, and is bigger than left priority
-    if (right < heap->size && left_p < right_p){
-      mover_p = right_p;
-      mover   = right;
+
+    /* if right exist, and is bigger than left priority. */
+    if (right < heap->size && left_p < right_p) {
+        mover_p = right_p;
+        mover   = right;
     }
-    // if the childen are bigger than the node in focus, flip biggest
-    if (this_p < mover_p){
-      exchange(heap->root,this,mover);
-      heapify(heap,mover);
+
+    /* if the childen are bigger than the node in focus, flip biggest. */
+    if (this_p < mover_p) {
+        exchange(heap->root,this,mover);
+        heapify(heap,mover);
     }
 }
 
