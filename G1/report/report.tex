@@ -14,7 +14,7 @@
         \texttt{mark@jacobi.pm}
 		 \\\\
 		\Large{Mads Ynddal} \\
-		\texttt{template@russianwomanlookingforyou.ru}
+		\texttt{mynddal@me.com}
 }
 
 \lstdefinestyle{customc}{
@@ -187,5 +187,77 @@ Test\\
 \textit{Running time}\\
 Test
 
-  
+\section*{Task 2 - syscall read/write}
+
+syscall_read og syscall_write blev skrevet med udgangspunkt i init_startup_fallback fra init/main.c. Implementeringen understøtter at læse fra og skrive til STDIN og STDOUT, men burde nemt kunne udvides ved at bruge fhandle argumentet.
+
+I syscall.h er funktionsnumrene allerede definreret for read og write.
+\begin{lstlisting}[style=customc]
+#define SYSCALL_READ 0x204
+#define SYSCALL_WRITE 0x205
+\end{lstlisting} 
+
+Så derfor kan man gå direkte til at tilføje en case for hver af dem i syscall.c
+
+\begin{lstlisting}[style=customc]
+switch (user_context->cpu_regs[MIPS_REGISTER_A0]) {
+    case SYSCALL_HALT:
+        halt_kernel();
+        break;
+    case SYSCALL_READ:
+        user_context->cpu_regs[MIPS_REGISTER_V0] =
+        syscall_read(
+            (int) user_context->cpu_regs[MIPS_REGISTER_A1],
+            (void *) user_context->cpu_regs[MIPS_REGISTER_A2],
+            (int) user_context->cpu_regs[MIPS_REGISTER_A3]
+        );
+
+        break;
+    case SYSCALL_WRITE:
+        user_context->cpu_regs[MIPS_REGISTER_V0] =
+        syscall_write(
+            (int) user_context->cpu_regs[MIPS_REGISTER_A1],
+            (void const *) user_context->cpu_regs[MIPS_REGISTER_A2],
+            (int) user_context->cpu_regs[MIPS_REGISTER_A3]
+        );
+
+        break;
+    default:
+        KERNEL_PANIC("Unhandled system call\n");
+}
+\end{lstlisting}
+
+De to cases kalder funktioner i filen IO.c som klarer det hele. I syscall.c
+sørges blot for at sende argumenterne videre og assigne resultatet til $v0$
+registeret.
+
+I IO.c initialiserer syscall_read ved kun at acceptere STDIN (for simplificering)
+og opretter en device handler for TTY, som vi kan bruge til at få en GCD. Denne 
+Generic Character Device kan bruges til at skrive til, og læse fra, TTY. Nedenfor
+er syscall_read vist med \emph{gcd->read()} til sidst. syscall_write er magen til,
+blot med \emph{gcd->write()} til sidst.
+
+\begin{lstlisting}[style=customc]
+int syscall_read(int fhandle, void *buffer, int length)
+{
+    device_t *dev;
+    gcd_t *gcd;
+
+    // Vi vil kun bruge STDIN på nuværende tidspunkt
+    if (fhandle != FILEHANDLE_STDIN)
+        return -1;
+
+    // Opret en device handle til TTY
+    dev = device_get(YAMS_TYPECODE_TTY, 0);
+    KERNEL_ASSERT(dev != NULL);
+
+    // Opret generic character device ud fra dev
+    gcd = (gcd_t *) dev->generic_device;
+    KERNEL_ASSERT(gcd != NULL);
+
+    // Skriv til TTY med read metoden
+    return gcd->read(gcd, buffer, length);
+}
+\end{lstlisting}
+
 \end{document}
