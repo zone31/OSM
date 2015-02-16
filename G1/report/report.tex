@@ -5,6 +5,9 @@
 \usepackage{fancyhdr, amsmath, amssymb, comment, caption, placeins, subfigure,
     fixltx2e, changepage, listings, courier, soul, hyperref, geometry,
     enumerate, listings, enumitem}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
 
 
 \author{\Large{Magnus N\o rskov Stavngaard} \\
@@ -34,6 +37,19 @@
 basicstyle=\footnotesize,
 language=C,
 numbers=none}
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\EUR}}1 {£}{{\pounds}}1
+}
 
 \title{
     \vspace{3cm}
@@ -161,12 +177,18 @@ Returns the first element in the heap, and max heapifys them.\\
 \textit{Assumptions}\\
 Again, we assume that the returned pointer is not the node element, but the pointer for the thing in the node type.\\
 
-\subsection{Running time}
+\subsection*{Running time and algorithm}
 For most of the functions, the running time is constant, in these functions, we do not iterate over the elements, or in some way make the code dependent of the size of the heap. therefore it is constant. We also assume that malloc space allocation is not time dependent of the size allocated.
 \\
 The functions of interest is heap\_insert and heap\_pop. these have $log(n)$ running times, since we need to maximize the heap, when we add or subtract elements.
-\\ \\
-heap\_insert uses to bottom to top heapyfi
+\subsubsection*{heap\_insert}
+heap\_insert uses to bottom to top heapify. When an element is inserted, it will be at the very end of the node array. From there, it will be compared to its parent node, if the parent node have a lower priority, the algorithm will flip their 
+position in the heap, and run the same process again, with focus on the same node, but at its new position. The algorithm stops if the parent node is bigger, or if the node becomes the top node.
+\subsubsection*{heap\_pop}
+heap\_pop uses top to bottom heapify. First the top element is returned, then it is flipped with the end element in the array, and the size of the array is lowered by one. We could just copy the last element to the first one instead of flipping them, but for simplicity we flip them like the insert algorithm.\\
+When the flip has occurred, we focus on the root node of the array. We then look
+at the nodes children. If They exist, we check if they are bigger. If both are bigger, we flip with the biggest one. This algorithm runs until the nodes underneath is smaller, or non existent.
+
 
 
 \section*{Task 2 - syscall read/write}
