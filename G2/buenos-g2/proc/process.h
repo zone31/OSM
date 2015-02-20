@@ -51,7 +51,7 @@ void process_start(const char *executable);
 
 /* Process state. */
 typedef enum {
-    PROCESS_NEW,
+    PROCESS_INIT,
     PROCESS_READY,
     PROCESS_RUNNING,
     PROCESS_WAITING,
@@ -61,7 +61,7 @@ typedef enum {
 
 typedef struct {
     char executable[PROCESS_MAX_FILELENGTH];
-    int pid;
+    process_id_t pid;
     int retval;
     process_state_t process_state;
 } process_control_block_t;
