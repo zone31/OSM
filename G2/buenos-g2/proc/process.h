@@ -47,10 +47,23 @@ void process_start(const char *executable);
 #define PROCESS_ILLEGAL_JOIN -2
 
 #define PROCESS_MAX_PROCESSES 32
+#define PROCESS_MAX_FILELENGTH 100
+
+/* Process state. */
+typedef enum {
+    PROCESS_NEW,
+    PROCESS_READY,
+    PROCESS_RUNNING,
+    PROCESS_WAITING,
+    PROCESS_HALTED,
+    PROCESS_DEAD
+} process_state_t;
 
 typedef struct {
-    /* STUB: Put something here. */
-    int dummy; /* Remove this. */
+    char executable[PROCESS_MAX_FILELENGTH];
+    int pid;
+    int retval;
+    process_state_t process_state;
 } process_control_block_t;
 
 /* Initialize the process table.  This must be called during kernel startup
