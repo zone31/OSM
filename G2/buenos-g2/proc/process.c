@@ -110,7 +110,7 @@ void process_start(const char *executable) {
     for(i = 0; i < CONFIG_USERLAND_STACK_SIZE; i++) {
         phys_page = pagepool_get_phys_page();
         KERNEL_ASSERT(phys_page != 0);
-        vm_map(my_entry->pagetable, phys_page, 
+        vm_map(my_entry->pagetable, phys_page,
                (USERLAND_STACK_TOP & PAGE_SIZE_MASK) - i*PAGE_SIZE, 1);
     }
 
@@ -120,14 +120,14 @@ void process_start(const char *executable) {
     for(i = 0; i < (int)elf.ro_pages; i++) {
         phys_page = pagepool_get_phys_page();
         KERNEL_ASSERT(phys_page != 0);
-        vm_map(my_entry->pagetable, phys_page, 
+        vm_map(my_entry->pagetable, phys_page,
                elf.ro_vaddr + i*PAGE_SIZE, 1);
     }
 
     for(i = 0; i < (int)elf.rw_pages; i++) {
         phys_page = pagepool_get_phys_page();
         KERNEL_ASSERT(phys_page != 0);
-        vm_map(my_entry->pagetable, phys_page, 
+        vm_map(my_entry->pagetable, phys_page,
                elf.rw_vaddr + i*PAGE_SIZE, 1);
     }
 
@@ -137,14 +137,14 @@ void process_start(const char *executable) {
     intr_status = _interrupt_disable();
     tlb_fill(my_entry->pagetable);
     _interrupt_set_state(intr_status);
-    
+
     /* Now we may use the virtual addresses of the segments. */
 
     /* Zero the pages. */
     memoryset((void *)elf.ro_vaddr, 0, elf.ro_pages*PAGE_SIZE);
     memoryset((void *)elf.rw_vaddr, 0, elf.rw_pages*PAGE_SIZE);
 
-    stack_bottom = (USERLAND_STACK_TOP & PAGE_SIZE_MASK) - 
+    stack_bottom = (USERLAND_STACK_TOP & PAGE_SIZE_MASK) -
         (CONFIG_USERLAND_STACK_SIZE-1)*PAGE_SIZE;
     memoryset((void *)stack_bottom, 0, CONFIG_USERLAND_STACK_SIZE*PAGE_SIZE);
 
@@ -188,15 +188,30 @@ void process_start(const char *executable) {
     KERNEL_PANIC("thread_goto_userland failed.");
 }
 
+/* Initialize all processes to be PROCESS_DEAD. */
+void process_init()
+{
+    int i;
 
-void process_init() {
-    KERNEL_PANIC("Not implemented: process_init");
+    for (i = 0; i < PROCESS_MAX_PROCESSES; i++)
+        process_table[i].process_state = PROCESS_DEAD;
 }
 
 process_id_t process_spawn(const char *executable) {
-    executable = executable; /* Dummy */
+    process_control_block_t control_block;
+
+    /* Test if the file exist. */
+
+    /* Test if there is space for another process in the process_table. */
+
+    /* Insert the process in the array of processes. */
+
+    /* Start the process. */
+    // process_start(control_block->pid);
+
     KERNEL_PANIC("Not implemented: process_spawn");
-    return 0; /* Dummy */
+
+    return control_block->pid;
 }
 
 /* Stop the process and the thread it runs in.  Sets the return value as
