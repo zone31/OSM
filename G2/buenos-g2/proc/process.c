@@ -65,7 +65,7 @@ process_control_block_t process_table[PROCESS_MAX_PROCESSES];
  * @executable The name of the executable to be run in the userland
  * process
  */
-void process_start(const char *executable) {
+void process_start(process_control_block_t control_block) {
     thread_table_t *my_entry;
     pagetable_t *pagetable;
     uint32_t phys_page;
@@ -92,7 +92,7 @@ void process_start(const char *executable) {
     my_entry->pagetable = pagetable;
     _interrupt_set_state(intr_status);
 
-    file = vfs_open((char *)executable);
+    file = vfs_open(control_block.executable);
     /* Make sure the file existed and was a valid ELF file */
     KERNEL_ASSERT(file >= 0);
     KERNEL_ASSERT(elf_parse_header(&elf, file));
@@ -183,6 +183,8 @@ void process_start(const char *executable) {
     user_context.cpu_regs[MIPS_REGISTER_SP] = USERLAND_STACK_TOP;
     user_context.pc = elf.entry_point;
 
+    control_block.process_state = PROCESS_RUNNING;
+
     thread_goto_userland(&user_context);
 
     KERNEL_PANIC("thread_goto_userland failed.");
@@ -198,25 +200,48 @@ void process_init()
 }
 
 process_id_t process_spawn(const char *executable) {
+    process_id_t pid;
     process_control_block_t control_block;
 
-    /* Test if the file exist. */
-
     /* Test if there is space for another process in the process_table. */
+    pid = alloc_process();
+
+    /* REPORT: we throw a kernel panic, if process table is full. */
+    if (pid == PROCESS_MAX_PROCESSES)
+        KERNEL_PANIC("Not space for any more processes.");
+
+    control_block.executable = strcpy(executable);
+    control_block.pid = pid;
+    control_block.process_state = PROCESS_INIT;
 
     /* Insert the process in the array of processes. */
+    process_table[control_block.pid] = control_block;
 
     /* Start the process. */
-    // process_start(control_block->pid);
-
-    KERNEL_PANIC("Not implemented: process_spawn");
+    process_start(control_block);
 
     return control_block->pid;
+}
+
+/* The function returns a process_id_t if there is space for another process in
+ * process_table.  If there is not space, the function returns
+ * PROCESS_PTABLE_FULL. */
+process_id_t alloc_process(void) {
+    int i;
+
+    for (i = 0; i < PROCESS_MAX_PROCESSES; i++)
+        if (process_table[i].process_state == DEAD)
+            return i;
+
+    return PROCESS_PTABLE_FULL;
 }
 
 /* Stop the process and the thread it runs in.  Sets the return value as
    well. */
 void process_finish(int retval) {
+    process_id_t pid = process_get_current_process();
+    process_control_block_t control_block = process_table[pid];
+
     retval = retval; /* Dummy */
     KERNEL_PANIC("Not implemented: process_finish");
 }
