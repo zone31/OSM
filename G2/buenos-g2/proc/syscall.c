@@ -94,13 +94,44 @@ void syscall_handle(context_t *user_context)
         break;
     case SYSCALL_WRITE:
         user_context->cpu_regs[MIPS_REGISTER_V0] =
-            syscall_write(A1, (char*) A2, A3);
+            syscall_write(A1, (char *) A2, A3);
         break;
     case SYSCALL_READ:
         user_context->cpu_regs[MIPS_REGISTER_V0] =
-            syscall_read(A1, (char*) A2, A3);
+            syscall_read(A1, (char *) A2, A3);
         break;
-    default: 
+    case SYSCALL_EXEC:
+        syscall_exec((const char *) user_context->cpu_regs[MIPS_REGISTER_A1]);
+        break;
+    case SYSCALL_EXIT:
+        user_context->cpu_regs[MIPS_REGISTER_V0] =
+        syscall_exit((int) user_context->cpy_regs[MIPS_REGISTER_A1]);
+        break;
+    case SYSCALL_JOIN:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    case SYSCALL_FORK:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    case SYSCALL_MEMLIMIT:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    case SYSCALL_OPEN:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    case SYSCALL_CLOSE:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    case SYSCALL_SEEK:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    case SYSCALL_CREATE:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    case SYSCALL_DELETE:
+        KERNEL_PANIC("Syscall not implemented.");
+        break;
+    default:
         KERNEL_PANIC("Unhandled system call\n");
     }
 
