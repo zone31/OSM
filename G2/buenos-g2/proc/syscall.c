@@ -41,6 +41,7 @@
 #include "kernel/assert.h"
 #include "drivers/device.h"
 #include "drivers/gcd.h"
+#include "kernel/process_control.h"
 
 #define V0 user_context->cpu_regs[MIPS_REGISTER_V0]
 #define A0 user_context->cpu_regs[MIPS_REGISTER_A0]
@@ -101,11 +102,11 @@ void syscall_handle(context_t *user_context)
             syscall_read(A1, (char *) A2, A3);
         break;
     case SYSCALL_EXEC:
+        user_context->cpu_regs[MIPS_REGISTER_V0] =
         syscall_exec((const char *) user_context->cpu_regs[MIPS_REGISTER_A1]);
         break;
     case SYSCALL_EXIT:
-        user_context->cpu_regs[MIPS_REGISTER_V0] =
-        syscall_exit((int) user_context->cpy_regs[MIPS_REGISTER_A1]);
+        syscall_exit((int) user_context->cpu_regs[MIPS_REGISTER_A1]);
         break;
     case SYSCALL_JOIN:
         KERNEL_PANIC("Syscall not implemented.");
