@@ -65,7 +65,7 @@ process_control_block_t process_table[PROCESS_MAX_PROCESSES];
  * @executable The name of the executable to be run in the userland
  * process
  */
-void process_start(process_control_block_t control_block) {
+void process_start(process_id_t pid) {
     thread_table_t *my_entry;
     pagetable_t *pagetable;
     uint32_t phys_page;
@@ -73,7 +73,7 @@ void process_start(process_control_block_t control_block) {
     uint32_t stack_bottom;
     elf_info_t elf;
     openfile_t file;
-
+    process_control_block_t control_block = process_table[pid];
     int i;
 
     interrupt_status_t intr_status;
@@ -199,9 +199,23 @@ void process_init()
         process_table[i].process_state = PROCESS_DEAD;
 }
 
+// char * stringcopy(const char *src)
+// {
+//     char res = malloc(sizeof(char) * PROCESS_MAX_FILELENGTH);
+//     char *write_here = (char *) res;
+
+//     while (*src != '\0')
+//         *write_here++ = *src++;
+
+//     *write_here = '\0';
+
+//     return res;
+// }
+
 process_id_t process_spawn(const char *executable) {
     process_id_t pid;
     process_control_block_t control_block;
+    TID_t thread;
 
     /* Test if there is space for another process in the process_table. */
     pid = alloc_process();
@@ -210,24 +224,19 @@ process_id_t process_spawn(const char *executable) {
     if (pid == PROCESS_MAX_PROCESSES)
         KERNEL_PANIC("Not space for any more processes.");
 
-    control_block.executable = (char *) executable;
-
-    // while (executable[i] != '\0') {
-    //     if (i < PROCESS_MAX_FILELENGTH)
-    //         control_block.executable[i] = executable[i++];
-    //     else
-    //         KERNEL_PANIC("Filename longer than PROCESS_MAX_FILELENGTH");
-    // }
-    // control_block.executable[i] = '\0';
-
+    stringcopy(control_block.executable, executable, PROCESS_MAX_FILELENGTH);
+    // control_block.executable = stringcopy(executable);
     control_block.pid = pid;
     control_block.process_state = PROCESS_INIT;
 
     /* Insert the process in the array of processes. */
     process_table[control_block.pid] = control_block;
 
+    thread = thread_create((void (*)(uint32_t))(&process_start), pid);
+    thread_run(thread);
+
     /* Start the process. */
-    process_start(control_block);
+    // process_start(control_block);
 
     return control_block.pid;
 }
