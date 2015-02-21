@@ -53,15 +53,23 @@ CFLAGS  += -G0 -I.. -Wall -W -Werror
 LDFLAGS := --script=ld.userland.script --cref -s -G0
 ASFLAGS := -I.. -Wa,-mips32
 
+
+
 # -G0 is needed to avoid GP optimization (LD won't link if it is used)
 
 # Compiling targets (Add explicit targets here if you need to do more
 # complex linking (e.g., your source code is divided to multiple
 # files))
 all: $(TARGETS)
+	../util/tfstool create ../fyams.harddisk 2048 disk
+	$(foreach var,$(TARGETS),../util/tfstool write ../fyams.harddisk $(var) $(var);)
+	../util/tfstool list ../fyams.harddisk
+
+
 
 $(TARGETS): %: $(SYSLIBS) %.o
 	$(LD) -o $@ $(LDFLAGS) -Map $@.map $^
+
 
 %.o: %.S
 	$(CC) -o $@ $(ASFLAGS) -c $<
@@ -70,7 +78,9 @@ $(TARGETS): %: $(SYSLIBS) %.o
 %.o: %.c
 	$(CC) -o $@  $(CFLAGS) -c $<
 
+
 clean:
 	rm -f $(SYSLIBS) $(OBJECTS) *.map $(TARGETS) *~
+	rm -f ../fyams.harddisk
 
 .PHONY: clean
