@@ -54,14 +54,15 @@ typedef enum {
     PROCESS_RUNNING,
     PROCESS_WAITING,
     PROCESS_HALTED,
-    PROCESS_DEAD
+    PROCESS_DEAD,
+    PROCESS_ZOMBIE
 } process_state_t;
 
 typedef struct {
     char executable[PROCESS_MAX_FILELENGTH];
     // char *executable;
     process_id_t pid;
-    int retval;
+    int exit_code;
     process_state_t process_state;
 } process_control_block_t;
 
