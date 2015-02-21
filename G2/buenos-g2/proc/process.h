@@ -39,8 +39,6 @@
 
 typedef int process_id_t;
 
-void process_start(const char *executable);
-
 #define USERLAND_STACK_TOP 0x7fffeffc
 
 #define PROCESS_PTABLE_FULL -1
@@ -60,11 +58,15 @@ typedef enum {
 } process_state_t;
 
 typedef struct {
-    char executable[PROCESS_MAX_FILELENGTH];
+    // char executable[PROCESS_MAX_FILELENGTH];
+    char *executable;
     process_id_t pid;
     int retval;
     process_state_t process_state;
 } process_control_block_t;
+
+void process_start(process_control_block_t process);
+process_id_t alloc_process(void);
 
 /* Initialize the process table.  This must be called during kernel startup
    before any other process-related calls. */
