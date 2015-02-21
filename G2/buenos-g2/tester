@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Script skrevet en af anden gruppe
+
+make clean &&
+make &&
+cd tests &&
+make clean &&
+make &&
+cd .. &&
+util/tfstool delete fyams.harddisk process_spawn &&
+util/tfstool write fyams.harddisk tests/process_spawn process_spawn &&
+fyams-sim buenos initprog=[disk]process_spawn
