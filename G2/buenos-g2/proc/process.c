@@ -256,12 +256,19 @@ process_id_t alloc_process(void) {
 
 /* Stop the process and the thread it runs in.  Sets the return value as
    well. */
-void process_finish(int retval) {
-    // process_id_t pid = process_get_current_process();
-    // process_control_block_t control_block = process_table[pid];
+void process_finish(int retval)
+{
+    process_id_t pid = process_get_current_process();
+    process_control_block_t control_block = process_table[pid];
+    thread_table_t *thread = thread_get_current_thread_entry();
 
-    retval = retval; /* Dummy */
-    KERNEL_PANIC("Not implemented: process_finish");
+    process_table[pid].process_state = PROCESS_ZOMBIE;
+    process_table[pid].exit_code = retval;
+
+    vm_destroy_pagetable(thread->pagetable);
+    thread->pagetable = NULL;
+
+    thread_finish();
 }
 
 int process_join(process_id_t pid) {
