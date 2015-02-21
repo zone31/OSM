@@ -58,14 +58,14 @@ typedef enum {
 } process_state_t;
 
 typedef struct {
-    // char executable[PROCESS_MAX_FILELENGTH];
-    char *executable;
+    char executable[PROCESS_MAX_FILELENGTH];
+    // char *executable;
     process_id_t pid;
     int retval;
     process_state_t process_state;
 } process_control_block_t;
 
-void process_start(process_control_block_t process);
+void process_start(process_id_t pid);
 process_id_t alloc_process(void);
 
 /* Initialize the process table.  This must be called during kernel startup
