@@ -210,7 +210,16 @@ process_id_t process_spawn(const char *executable) {
     if (pid == PROCESS_MAX_PROCESSES)
         KERNEL_PANIC("Not space for any more processes.");
 
-    control_block.executable = strcpy(executable);
+    control_block.executable = (char *) executable;
+
+    // while (executable[i] != '\0') {
+    //     if (i < PROCESS_MAX_FILELENGTH)
+    //         control_block.executable[i] = executable[i++];
+    //     else
+    //         KERNEL_PANIC("Filename longer than PROCESS_MAX_FILELENGTH");
+    // }
+    // control_block.executable[i] = '\0';
+
     control_block.pid = pid;
     control_block.process_state = PROCESS_INIT;
 
@@ -220,7 +229,7 @@ process_id_t process_spawn(const char *executable) {
     /* Start the process. */
     process_start(control_block);
 
-    return control_block->pid;
+    return control_block.pid;
 }
 
 /* The function returns a process_id_t if there is space for another process in
@@ -230,7 +239,7 @@ process_id_t alloc_process(void) {
     int i;
 
     for (i = 0; i < PROCESS_MAX_PROCESSES; i++)
-        if (process_table[i].process_state == DEAD)
+        if (process_table[i].process_state == PROCESS_DEAD)
             return i;
 
     return PROCESS_PTABLE_FULL;
@@ -239,8 +248,8 @@ process_id_t alloc_process(void) {
 /* Stop the process and the thread it runs in.  Sets the return value as
    well. */
 void process_finish(int retval) {
-    process_id_t pid = process_get_current_process();
-    process_control_block_t control_block = process_table[pid];
+    // process_id_t pid = process_get_current_process();
+    // process_control_block_t control_block = process_table[pid];
 
     retval = retval; /* Dummy */
     KERNEL_PANIC("Not implemented: process_finish");
