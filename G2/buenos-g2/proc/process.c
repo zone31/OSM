@@ -259,7 +259,6 @@ process_id_t alloc_process(void) {
 void process_finish(int retval)
 {
     process_id_t pid = process_get_current_process();
-    process_control_block_t control_block = process_table[pid];
     thread_table_t *thread = thread_get_current_thread_entry();
 
     process_table[pid].process_state = PROCESS_ZOMBIE;
