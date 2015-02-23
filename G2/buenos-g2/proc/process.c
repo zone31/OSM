@@ -324,6 +324,7 @@ int process_join(process_id_t pid)
     /* Wait for the process to call process_finish and become a zombie. */
     while (process_table[pid].process_state != PROCESS_ZOMBIE) {
         spinlock_release(&process_table_slock);
+        sleepq_add(&process_table[pid]);
         thread_switch();
         spinlock_acquire(&process_table_slock);
         kprintf("%d", process_table[pid].process_state);
