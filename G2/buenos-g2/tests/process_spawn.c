@@ -1,6 +1,5 @@
 #include "process_spawn.h"
-#include "proc/process.h"
-#include "kernel/process_control.h"
+#include "lib.h"
 
 const char *read_write = "[disk]rw";
 

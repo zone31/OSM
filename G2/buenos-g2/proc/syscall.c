@@ -85,7 +85,7 @@ void syscall_handle(context_t *user_context)
         syscall_exit((int) A1);
         break;
     case SYSCALL_JOIN:
-        KERNEL_PANIC("Syscall not implemented.");
+        V0 = syscall_join((int) A1);
         break;
     case SYSCALL_FORK:
         KERNEL_PANIC("Syscall not implemented.");

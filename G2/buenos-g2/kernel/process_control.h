@@ -3,5 +3,6 @@
 
 int syscall_exec(const char *filename);
 void syscall_exit(int retval);
+int syscall_join(int pid);
 
 #endif

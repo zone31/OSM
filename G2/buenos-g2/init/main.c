@@ -133,9 +133,11 @@ void init_startup_thread(uint32_t arg)
     kprintf("Starting initial program '%s'\n", bootargs_get("initprog"));
 
     // process_start(bootargs_get("initprog"));
-    process_spawn(bootargs_get("initprog"));
+    // process_join(process_spawn(bootargs_get("initprog")));
+    int pid = process_spawn(bootargs_get("initprog"));
+    kprintf("main.c %d 01\n", pid);
+    process_join(pid);
 
-    while(1){}
     /* The current process_start() should never return. */
     KERNEL_PANIC("Run out of initprog.\n");
 }
@@ -215,6 +217,9 @@ void init(void)
 
     kwrite("Initializing virtual memory\n");
     vm_init();
+
+    kwrite("Initializing processes\n");
+    process_init();
 
     kprintf("Creating initialization thread\n");
     startup_thread = thread_create(&init_startup_thread, 0);

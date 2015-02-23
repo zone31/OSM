@@ -73,7 +73,7 @@ void process_start(process_id_t pid) {
     uint32_t stack_bottom;
     elf_info_t elf;
     openfile_t file;
-    process_control_block_t control_block = process_table[pid];
+    // process_control_block_t control_block = process_table[pid];
     int i;
 
     interrupt_status_t intr_status;
@@ -92,7 +92,7 @@ void process_start(process_id_t pid) {
     my_entry->pagetable = pagetable;
     _interrupt_set_state(intr_status);
 
-    file = vfs_open(control_block.executable);
+    file = vfs_open(process_table[pid].executable);
     /* Make sure the file existed and was a valid ELF file */
     KERNEL_ASSERT(file >= 0);
     KERNEL_ASSERT(elf_parse_header(&elf, file));
@@ -183,7 +183,10 @@ void process_start(process_id_t pid) {
     user_context.cpu_regs[MIPS_REGISTER_SP] = USERLAND_STACK_TOP;
     user_context.pc = elf.entry_point;
 
-    control_block.process_state = PROCESS_RUNNING;
+    process_table[pid].process_state = PROCESS_RUNNING;
+    // control_block.process_state = PROCESS_RUNNING;
+
+    kprintf("process is running\n");
 
     thread_goto_userland(&user_context);
 
@@ -199,19 +202,6 @@ void process_init()
         process_table[i].process_state = PROCESS_DEAD;
 }
 
-// char * stringcopy(const char *src)
-// {
-//     char res = malloc(sizeof(char) * PROCESS_MAX_FILELENGTH);
-//     char *write_here = (char *) res;
-
-//     while (*src != '\0')
-//         *write_here++ = *src++;
-
-//     *write_here = '\0';
-
-//     return res;
-// }
-
 process_id_t process_spawn(const char *executable) {
     process_id_t pid;
     process_control_block_t control_block;
@@ -225,18 +215,20 @@ process_id_t process_spawn(const char *executable) {
         KERNEL_PANIC("Not space for any more processes.");
 
     stringcopy(control_block.executable, executable, PROCESS_MAX_FILELENGTH);
-    // control_block.executable = stringcopy(executable);
     control_block.pid = pid;
     control_block.process_state = PROCESS_INIT;
+
+    /* Set the parent of the new process as the process running currently. */
+    control_block.parent = process_get_current_process();
 
     /* Insert the process in the array of processes. */
     process_table[control_block.pid] = control_block;
 
+    /* Start a new thread and start the process in it. */
     thread = thread_create((void (*)(uint32_t))(&process_start), pid);
     thread_run(thread);
 
-    /* Start the process. */
-    // process_start(control_block);
+    kprintf("process is init\n");
 
     return control_block.pid;
 }
@@ -261,6 +253,8 @@ void process_finish(int retval)
     process_id_t pid = process_get_current_process();
     thread_table_t *thread = thread_get_current_thread_entry();
 
+    kprintf("process finish running\n");
+
     process_table[pid].process_state = PROCESS_ZOMBIE;
     process_table[pid].exit_code = retval;
 
@@ -268,12 +262,53 @@ void process_finish(int retval)
     thread->pagetable = NULL;
 
     thread_finish();
+
+    kprintf("process finish end\n");
 }
 
-int process_join(process_id_t pid) {
-    pid = pid; /* Dummy */
-    KERNEL_PANIC("Not implemented: process_join");
-    return 0; /* Dummy */
+int process_join(process_id_t pid)
+{
+    int return_value;
+    interrupt_status_t intr_status;
+    /* The process trying to join. */
+    process_id_t parent = process_get_current_process();
+
+    intr_status = _interrupt_disable();
+
+    kprintf("process.c parent %d child %d 01\n", parent, pid);
+    kprintf("process.c child's parent: %d 02\n", process_table[pid].parent);
+
+    /* Test if pid is legal. */
+    if (pid < 0 || pid >= PROCESS_MAX_PROCESSES) {
+        KERNEL_PANIC("process illegal join");
+        return PROCESS_ILLEGAL_JOIN;
+    }
+
+    /* Test if it is the parent trying to join, if not it is an illegal join. */
+    // if (process_table[pid].parent != parent)
+    //     return PROCESS_ILLEGAL_JOIN;
+    KERNEL_ASSERT(process_table[pid].parent == parent);
+
+    kprintf("waiting for child to become zombi\n");
+    /* Wait for the process to call process_finish and become a zombie. */
+    while (process_table[pid].process_state != PROCESS_ZOMBIE) {
+        ;// kprintf("%d", process_table[pid].process_state);
+    }
+    kprintf("\n");
+
+    kprintf("after child became zombi\n");
+
+    return_value = process_table[pid].exit_code;
+    process_set_dead(pid); /* Kill the process. */
+
+    _interrupt_set_state(intr_status);
+
+    return return_value;
+}
+
+void process_set_dead(process_id_t pid)
+{
+    process_table[pid].process_state = PROCESS_DEAD;
 }
 
 process_id_t process_get_current_process(void) {

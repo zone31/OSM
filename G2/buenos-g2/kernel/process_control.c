@@ -10,3 +10,8 @@ void syscall_exit(int retval)
 {
     process_finish(retval);
 }
+
+int syscall_join(int pid)
+{
+    return process_join(pid);
+}

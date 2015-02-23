@@ -49,21 +49,21 @@ typedef int process_id_t;
 
 /* Process state. */
 typedef enum {
-    PROCESS_INIT,
+    PROCESS_INIT = 0,
     PROCESS_READY,
     PROCESS_RUNNING,
     PROCESS_WAITING,
     PROCESS_HALTED,
-    PROCESS_DEAD,
-    PROCESS_ZOMBIE
+    PROCESS_ZOMBIE,
+    PROCESS_DEAD
 } process_state_t;
 
 typedef struct {
-    char executable[PROCESS_MAX_FILELENGTH];
-    // char *executable;
-    process_id_t pid;
-    int exit_code;
-    process_state_t process_state;
+    process_id_t pid;                        /* ID of this process. */
+    char executable[PROCESS_MAX_FILELENGTH]; /* The name of the file run. */
+    int exit_code;                           /* The return value of the file. */
+    process_state_t process_state;           /* The state of the process. */
+    process_id_t parent;                     /* ID of the parent process. */
 } process_control_block_t;
 
 void process_start(process_id_t pid);
@@ -90,5 +90,7 @@ process_id_t process_get_current_process(void);
 
 /* Return PCB of current process. */
 process_control_block_t *process_get_current_process_entry(void);
+
+void process_set_dead(process_id_t pid);
 
 #endif

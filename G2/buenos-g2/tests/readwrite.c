@@ -1,4 +1,4 @@
-#include "tests/lib.h"
+#include "lib.h"
 #include "proc/syscall.h"
 
 int main(void)
@@ -11,7 +11,7 @@ int main(void)
     syscall_write(FILEHANDLE_STDOUT, buffer, 128);
     syscall_write(FILEHANDLE_STDOUT, "\n", 1);
 
-    syscall_halt();
+    syscall_exit(0);
 
     return 0;
 }
