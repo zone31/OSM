@@ -1,1 +1,0 @@
-syscall_read og syscall_write blev skrevet med udgangspunkt i init_startup_fallback fra init/main.c. Implementeringen understøtter at læse fra og skrive til STDIN og STDOUT, men burde nemt kunne udvides ved at bruge fhandle argumentet.
