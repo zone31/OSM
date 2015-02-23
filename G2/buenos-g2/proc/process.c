@@ -316,9 +316,9 @@ int process_join(process_id_t pid)
     }
 
     /* Test if it is the parent trying to join, if not it is an illegal join. */
-    // if (process_table[pid].parent != parent)
-    //     return PROCESS_ILLEGAL_JOIN;
-    KERNEL_ASSERT(process_table[pid].parent == parent);
+    if (process_table[pid].parent != parent)
+        return PROCESS_ILLEGAL_JOIN;
+    // KERNEL_ASSERT(process_table[pid].parent == parent);
 
     kprintf("waiting for child to become zombi\n");
     /* Wait for the process to call process_finish and become a zombie. */
