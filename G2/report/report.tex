@@ -94,11 +94,6 @@ numbers=none}
 
     \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
-    \section{Introduction}
-    We will start the report with a description of how the process
-    implementation should function.  We will then afterwards describe the
-    problems we had with the implementation and how our implementation works.
-
     \section{Types and functions for userland processes in Buenos}
     In this assignment we were asked to implement userland processes and the
     library the kernel use when managing the userland processes.  We first
@@ -215,6 +210,10 @@ int syscall_join(int pid)
     All the functions are oneliners mapping directly to function described in
     the previous section.
 
-    \section{Testing}
+    \section{Our implementation}
+    We implemented the syscalls and processes described above, but somehow the test we made did not seem to work. If we print the test's treads, and make them print something, the print order in the terminal is not as we expected. It seems that a tread will go all the way to its return statement, and then the next prints will be the started treads.
+    \\
+    syscall\_join seems not to join the treads, but sometimes the results are correct anyways (Run test npj.c)
+    
 
 \end{document}
