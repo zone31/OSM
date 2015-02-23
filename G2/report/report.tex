@@ -54,7 +54,7 @@ numbers=none}
 \title{
     \vspace{3cm}
     \Huge{OSM} \\
-    \Large{G1}
+    \Large{G2}
 }
 
 \pagestyle{fancy}
@@ -114,10 +114,102 @@ typedef struct {
     contains a unique id used to identify it in a table of all processes.  It
     contains an exit code which is set when the process exits. It contains a
     process state, which we define by an enumerator, examples of values is
-    \texttt{PROCESS_ZOMBIE}, \texttt{PROCESS_DEAD}, \texttt{PROCESS_RUNNING}.
+    \texttt{PROCESS\_ZOMBIE}, \texttt{PROCESS\_DEAD}, \texttt{PROCESS\_RUNNING}.
     Lastly a process contains a pid which references its parent process. \\
 
-    In the file \textit{process.c} we implemented the function managing the
-    process table.  When a user creates a process,
+    In the file \textit{proc/process.c} we implemented the function managing the
+    process table.  When a user creates a process, he makes the system call
+    \texttt{SYSCALL\_EXEC}, this system call calls the function
+    \texttt{process\_spawn} with a file name supplied to the system in the
+    \texttt{A1 MIPS} register.  Process spawn finds a free space in the table of
+    processes and set that process' state to \texttt{PROCESS\_INIT}, it also set
+    the parent of the process as the result of calling
+    \texttt{process\_get\_current\_process}.  Then the function call
+    \texttt{thread\_create} with a function pointer to the function
+    \texttt{process\_start} and the id of that process.  This function call
+    creates a new thread to run the process in and defines what executable to
+    run in the thread.  Lastly \texttt{process\_spawn} call \texttt{thread\_run}
+    to start the execution of the process. \\
+
+    When a process has been started a process need to call
+    \texttt{process\_finish} to stop executing.  This is done by making the
+    system call \texttt{SYSCALL\_EXIT} syscall exit takes an integer return
+    value and calls the function \texttt{process\_finish} to end the process. In
+    \texttt{process\_finish} the process state of the process is set to
+    \texttt{PROCESS\_ZOMBIE}, we don't make the process \texttt{PROCESS\_FREE}
+    as the parent process might want to read the return value.  We then clean up
+    the thread by calling \texttt{thread\_finish} and then the function
+    returns. \\
+
+    When a parent process starts the execution of a child process it might later
+    want to join with the process.  It does so by making the system call
+    \texttt{PROCESS\_JOIN}, process join takes the id of the process the parent
+    want to join with as a parameter and calls the \texttt{process\_join}
+    function.  In the function we first get the current process running by
+    calling \texttt{process\_get\_current\_process}, this is the process that
+    called the join function and we check if this process is the parent of the
+    process it tries to join with.  If this is not the case or if the process
+    tries to join with a non existing process we return
+    \texttt{PROCESS\_ILLEGAL\_JOIN}.  If this is not the case we check if the
+    process the parent is trying to join with is in the \texttt{PROCESS\_ZOMBIE}
+    state, if this is the case we know the process is finished and we can just
+    extract the return value.  If it is not the case we start waiting for the
+    child process to finish and change state to \texttt{PROCESS\_ZOMBIE}. \\
+
+    Before the OS start the first process the OS must call the function
+    \texttt{process\_init} which simply loops through all the processes and sets
+    them as \texttt{PROCESS\_DEAD}.
+
+    \section{System calls for user-process control in Buenos}
+    As described in the earlier section a user can control the processes by
+    making use of system calls.  The three system calls used to control
+    processes are, \texttt{SYSCALL\_EXEC}, \texttt{SYSCALL\_EXIT} and
+    \texttt{SYSCALL\_JOIN}.  The tree syscalls are handled in the switch case in
+    the file \textit{proc/syscall.c}
+
+    \begin{lstlisting}[style=customc]
+switch(A0) {
+
+(...)
+
+case SYSCALL_EXEC:
+    V0 = syscall_exec((const char *) A1);
+    break;
+case SYSCALL_EXIT:
+    syscall_exit((int) A1);
+    break;
+case SYSCALL_JOIN:
+    V0 = syscall_join((int) A1);
+    break;
+
+(...)
+
+}
+    \end{lstlisting}
+
+    The actual functions are defined in the file
+    \textit{kernel/process\_control.c} as,
+
+    \begin{lstlisting}[style=customc]
+int syscall_exec(const char *filename)
+{
+    return process_spawn(filename);
+}
+
+void syscall_exit(int retval)
+{
+    process_finish(retval);
+}
+
+int syscall_join(int pid)
+{
+    return process_join(pid);
+}
+    \end{lstlisting}
+
+    All the functions are oneliners mapping directly to function described in
+    the previous section.
+
+    \section{Testing}
 
 \end{document}
