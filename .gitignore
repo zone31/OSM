@@ -13,3 +13,4 @@ tfstool
 readwrite
 halt
 .DS_Store
+*.fdb_latexmk
