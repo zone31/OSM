@@ -20,17 +20,17 @@
 		\texttt{mynddal@me.com}
 }
 
-\lstdefinestyle{customc}{
-  belowcaptionskip=1\baselineskip,
-  breaklines=true,
-  xleftmargin=\parindent,
-  language=C,
-  showstringspaces=false,
-  keywordstyle=\bfseries\color{green!40!black},
-  morekeywords={size_t,node,heap},
-  commentstyle=\itshape\color{purple!40!black},
-  identifierstyle=\color{blue},
-  stringstyle=\color{orange},
+\lstdefinestyle{customc} {
+    belowcaptionskip=1\baselineskip,
+    breaklines=true,
+    xleftmargin=\parindent,
+    language=C,
+    showstringspaces=false,
+    keywordstyle=\bfseries\color{green!40!black},
+    morekeywords={size_t,node,heap},
+    commentstyle=\itshape\color{purple!40!black},
+    identifierstyle=\color{blue},
+    stringstyle=\color{orange},
 }
 
 \lstset{
@@ -38,17 +38,17 @@ basicstyle=\footnotesize,
 language=C,
 numbers=none}
 \lstset{literate=
-  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
-  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
-  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
-  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
-  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
-  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
-  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
-  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
-  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
-  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
-  {€}{{\EUR}}1 {£}{{\pounds}}1
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+    {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+    {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+    {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+    {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+    {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+    {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+    {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+    {€}{{\EUR}}1 {£}{{\pounds}}1
 }
 
 \title{
@@ -94,233 +94,30 @@ numbers=none}
 
     \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
-\section*{Task 1 - A Priority Queue}
-We were asked to implement a heap priority queue in the programming language C.
-The heap should handle any kind of data and should hold as many elements as the
-user wants.  This means that the heap should expand when needed and use void
-pointers to save elements on the heap.
+    \section{Types and functions for userland processes in Buenos}
+    In this assignment we were asked to implement userland processes and the
+    library the kernel use when managing the userland processes.  We first
+    implemented a datastructure in \textit{proc/process.h} representing a
+    userland process.
 
-\subsection*{Function Description and Assumptions}
-The heap is represented with this structure,
-
-\begin{lstlisting}[style=customc]
+    \begin{lstlisting}[style=customc]
 typedef struct {
-  node *root;
-  size_t size;
-  size_t alloc_size;
-} heap;
-\end{lstlisting}
+    process_id_t pid;                        /* ID of this process. */
+    char executable[PROCESS_MAX_FILELENGTH]; /* The name of the file run. */
+    int exit_code;                           /* The return value. */
+    process_state_t process_state;           /* The state of the process. */
+    process_id_t parent;                     /* ID of the parent process. */
+} process_control_block_t;
+    \end{lstlisting}
 
-\textit{Description} \\
-The heap contains an array of node pointers, the size of the heap in number of
-elements, and the size of the allocated space in bytes. \\
-\textit{Assumptions} \\
-We assumed that root is an array. \\
+    A process contains a name of an executable file that it executes.  It
+    contains a unique id used to identify it in a table of all processes.  It
+    contains an exit code which is set when the process exits. It contains a
+    process state, which we define by an enumerator, examples of values is
+    \texttt{PROCESS_ZOMBIE}, \texttt{PROCESS_DEAD}, \texttt{PROCESS_RUNNING}.
+    Lastly a process contains a pid which references its parent process. \\
 
-A node in the array in the heap is represented by the struct,
-
-\begin{lstlisting}[style=customc]
-typedef struct {
-  void *thing;
-  int priority;
-} node;
-\end{lstlisting}
-
-\textit{Description}\\
-The void pointer "thing" is a pointer to the element queued, and the integer
-priority contains the priority of a given node.  The higher the value, the
-higher priority. \\
-\textit{Assumptions}\\
-We assumed we were building a max-heap which is why a greater numerical value of
-priority is assumed to correspond to a higher priority. \\
-
-\begin{lstlisting}[style=customc]
-void heap_initialize(heap *);
-\end{lstlisting}
-\textit{Description} \\
-This function initializes the heap, malloc is called to allocate space for the
-nodes and the length of the heap and the allocated length is set.
-
-\begin{lstlisting}[style=customc]
-void heap_clear(heap *);
-\end{lstlisting}
-\textit{Description}\\
-Frees the space used to store the nodes in the heap, so when the struct goes out
-of scope, no memory is associated with the heap anymore.
-
-\begin{lstlisting}[style=customc]
-size_t heap_size(heap *);
-\end{lstlisting}
-
-\textit{Description}\\
-Returns the amount of elements in the heap. (stored under size in the heap
-structure). \\
-
-\begin{lstlisting}[style=customc]
-void * heap_top(heap *);
-\end{lstlisting}
-
-\textit{Description} \\
-Returns the pointer for the thing in the highest priority node.
-\textit{Assumptions}\\
-Since this function had a void pointer return type instead of a node pointer, we
-assumed that only the void pointer "thing" was wanted for return, and not the
-whole node element.  We simply return the first element in the array since the
-heap property dictates that that is where the highest priority element is. \\
-
-\begin{lstlisting}[style=customc]
-void heap_insert(heap *, void *, int);
-\end{lstlisting}
-\textit{Description}\\
-Inserts an element into the heap.  The function arguments is a heap pointer, a
-void pointer for the thing in the node type, and an integer for the priority. \\
-
-\begin{lstlisting}[style=customc]
-void * heap_pop(heap *);
-\end{lstlisting}
-\textit{Description}\\
-Returns the a void pointer to the element in the heap with the highest priority.
-The returned element is removed from the heap, and the heap is updated so the
-next highest priority element is now on top.
-\textit{Assumptions}\\
-Again, we assume that the returned pointer is not the node element, but the
-pointer for the thing in the node type. \\
-
-\subsection*{Running time and algorithm}
-For most of the functions, the running time is constant, in these functions, we
-do not iterate over the elements, or in some way make the code independent on
-the size of the heap. therefore it is constant. We also assume that malloc space
-allocation is not time dependent of the size allocated. \\
-The functions of interest is heap\_insert and heap\_pop. these have $O(log n)$
-running times.
-
-\subsubsection*{heap\_insert}
-heap\_insert uses to bottom to top heapify. When an element is inserted, it will
-be at the very end of the node array.  From there, it will be compared to its
-parent node, if the parent node have a lower priority, the algorithm will flip
-their position in the heap, and run the same process again, with focus on the
-same node, but at its new position.  The algorithm stops if the parent node is
-bigger, or if the node becomes the top node.
-
-\subsubsection*{heap\_pop}
-heap\_pop uses top to bottom heapify.  First the top element is returned, then
-it is flipped with the end element in the array, and the size of the array is
-lowered by one. We could just copy the last element to the first one instead of
-flipping them, but for simplicity we flip them like the insert algorithm. \\
-When the flip has occurred, we focus on the root node of the array.  We then
-look at the nodes children.  If They exist, we check if they are bigger.  If
-both are bigger, we flip with the biggest one.  This algorithm runs until the
-nodes underneath is smaller, or non existent.
-
-\section*{Task 2 - syscall read/write}
-In this assignment we were asked to implement read and write to standard in and
-out for the Buenos operating system. \\
-
-Our implementation of \textit{syscall\_read} and \textit{syscall\_write} was
-written inspired by the code in \textit{init\_startup\_fallback} from
-\textit{init/main.c}.  The implementation should be easily expandable to be able
-to read and write using the filehandle argument given to the read and write
-functions.
-
-In \textit{syscall.h} the syscall numbers are already defined for the read and
-write function as,
-
-\begin{lstlisting}[style=customc]
-#define SYSCALL\_READ  0x204
-#define SYSCALL\_WRITE 0x205
-\end{lstlisting}
-
-Therefore we created a case for these system calls in the file
-\textit{syscall.c}.
-
-\begin{lstlisting}[style=customc]
-switch (user_context->cpu_regs[MIPS_REGISTER_A0]) {
-    case SYSCALL_HALT:
-        halt_kernel();
-        break;
-    case SYSCALL_READ:
-        user_context->cpu_regs[MIPS_REGISTER_V0] =
-        syscall_read(
-            (int) user_context->cpu_regs[MIPS_REGISTER_A1],
-            (void *) user_context->cpu_regs[MIPS_REGISTER_A2],
-            (int) user_context->cpu_regs[MIPS_REGISTER_A3]
-        );
-
-        break;
-    case SYSCALL_WRITE:
-        user_context->cpu_regs[MIPS_REGISTER_V0] =
-        syscall_write(
-            (int) user_context->cpu_regs[MIPS_REGISTER_A1],
-            (void const *) user_context->cpu_regs[MIPS_REGISTER_A2],
-            (int) user_context->cpu_regs[MIPS_REGISTER_A3]
-        );
-
-        break;
-    default:
-        KERNEL_PANIC("Unhandled system call\n");
-}
-\end{lstlisting}
-
-The syscall number is saved in the MIPS register A0, therefore a switch is
-performed on these system calls so we handle the correct system call.  The
-arguments to the read and write functions can be found in the MIPS registers
-A1, A2 and A3, and the return value of the function should be saved in the MIPS
-register V0.  The only thing done in the \textit{syscall.c} file is casting the
-arguments to the correct types and saving the result of the function call the V0
-register.
-
-In \textit{IO.c} we initialize read by accepting only reading from standard in
-(for simplicity) if a user try and read from anywhere else $-1$ is returned to
-signify an error.  After this we create a device handler for TTY which we can
-use to get a GCD, Generic Character Device which we use to read and write from a
-TTY.  For this we simply use the already defined \emph{gcd->read()} and
-\emph{gcd->write()} functions.  Below this we show our implementation of read,
-the write implementation is almost the same.
-
-\begin{lstlisting}[style=customc]
-int syscall_read(int fhandle, void *buffer, int length)
-{
-    device_t *dev;
-    gcd_t *gcd;
-
-    // Vi vil kun bruge STDIN på nuværende tidspunkt
-    if (fhandle != FILEHANDLE_STDIN)
-        return -1;
-
-    // Opret en device handle til TTY
-    dev = device_get(YAMS_TYPECODE_TTY, 0);
-    KERNEL_ASSERT(dev != NULL);
-
-    // Opret generic character device ud fra dev
-    gcd = (gcd_t *) dev->generic_device;
-    KERNEL_ASSERT(gcd != NULL);
-
-    // Skriv til TTY med read metoden
-    return gcd->read(gcd, buffer, length);
-}
-\end{lstlisting}
-
-We were also asked to test our implementation, we do that with a short test file
-in the tests folder called \textit{readwrite.c}.
-
-\begin{lstlisting}[style=customc]
-#include "tests/lib.h"
-#include "proc/syscall.h"
-
-int main(void)
-{
-    char buffer[128];
-
-    syscall_write(FILEHANDLE_STDOUT, "Hi, press a key!\n", 18);
-    syscall_read(FILEHANDLE_STDIN, buffer, 127);
-    syscall_write(FILEHANDLE_STDOUT, "Pressed button was, ", 21);
-    syscall_write(FILEHANDLE_STDOUT, buffer, 128);
-    syscall_write(FILEHANDLE_STDOUT, "\n", 1);
-
-    syscall_halt();
-
-    return 0;
-}
-\end{lstlisting}
+    In the file \textit{process.c} we implemented the function managing the
+    process table.  When a user creates a process,
 
 \end{document}
