@@ -1,4 +1,0 @@
-util/tfstool create fyams.harddisk 2048 disk
-util/tfstool write fyams.harddisk tests/halt halt
-util/tfstool list fyams.harddisk
-fyams-sim buenos initprog=[disk]halt
