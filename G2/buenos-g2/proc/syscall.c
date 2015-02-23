@@ -42,34 +42,13 @@
 #include "drivers/device.h"
 #include "drivers/gcd.h"
 #include "kernel/process_control.h"
+#include "kernel/IO.h"
 
 #define V0 user_context->cpu_regs[MIPS_REGISTER_V0]
 #define A0 user_context->cpu_regs[MIPS_REGISTER_A0]
 #define A1 user_context->cpu_regs[MIPS_REGISTER_A1]
 #define A2 user_context->cpu_regs[MIPS_REGISTER_A2]
 #define A3 user_context->cpu_regs[MIPS_REGISTER_A3]
-
-
-int syscall_write(uint32_t fd, char *s, int len)
-{
-    fd = fd;
-    /* Not a G1 solution! */
-    if (len > 0) {
-        kprintf("%c", *s);
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-int syscall_read(uint32_t fd, char *s, int len)
-{
-    fd = fd;
-    len = len;
-    /* Not a G1 solution! */
-    ((gcd_t *)(device_get(YAMS_TYPECODE_TTY, 0)->generic_device))->read((gcd_t *)(device_get(YAMS_TYPECODE_TTY, 0)->generic_device), s, 1);
-    return 1;
-}
 
 /**
  * Handle system calls. Interrupts are enabled when this function is
@@ -89,24 +68,21 @@ void syscall_handle(context_t *user_context)
      * returning from this function the userland context will be
      * restored from user_context.
      */
-    switch(user_context->cpu_regs[MIPS_REGISTER_A0]) {
+    switch(A0) {
     case SYSCALL_HALT:
         halt_kernel();
         break;
     case SYSCALL_WRITE:
-        user_context->cpu_regs[MIPS_REGISTER_V0] =
-            syscall_write(A1, (char *) A2, A3);
+        V0 = syscall_write(A1, (char *) A2, A3);
         break;
     case SYSCALL_READ:
-        user_context->cpu_regs[MIPS_REGISTER_V0] =
-            syscall_read(A1, (char *) A2, A3);
+        V0 = syscall_read(A1, (char *) A2, A3);
         break;
     case SYSCALL_EXEC:
-        user_context->cpu_regs[MIPS_REGISTER_V0] =
-        syscall_exec((const char *) user_context->cpu_regs[MIPS_REGISTER_A1]);
+        V0 = syscall_exec((const char *) A1);
         break;
     case SYSCALL_EXIT:
-        syscall_exit((int) user_context->cpu_regs[MIPS_REGISTER_A1]);
+        syscall_exit((int) A1);
         break;
     case SYSCALL_JOIN:
         KERNEL_PANIC("Syscall not implemented.");
