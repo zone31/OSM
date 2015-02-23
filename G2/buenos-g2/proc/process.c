@@ -33,6 +33,22 @@
  * $Id: process.c,v 1.11 2007/03/07 18:12:00 ttakanen Exp $
  *
  */
+#include "proc/process.h"
+#include "proc/elf.h"
+#include "kernel/thread.h"
+#include "kernel/assert.h"
+#include "kernel/interrupt.h"
+#include "kernel/config.h"
+#include "kernel/sleepq.h"
+#include "lib/debug.h"
+#include "lib/libc.h"
+#include "fs/vfs.h"
+#include "drivers/yams.h"
+#include "vm/vm.h"
+#include "vm/pagepool.h"
+
+
+
 
 #include "proc/process.h"
 #include "proc/elf.h"
@@ -66,6 +82,7 @@ process_control_block_t process_table[PROCESS_MAX_PROCESSES];
  * process
  */
 void process_start(process_id_t pid) {
+    kprintf("Now in: Process_start #001\n");
     thread_table_t *my_entry;
     pagetable_t *pagetable;
     uint32_t phys_page;
@@ -92,7 +109,11 @@ void process_start(process_id_t pid) {
     my_entry->pagetable = pagetable;
     _interrupt_set_state(intr_status);
 
+    kprintf("Now in: Process_start #002\n");
+    kprintf("Now in: Process_start #024\n");
+    kprintf("process_table[pid].executable");
     file = vfs_open(process_table[pid].executable);
+    kprintf("Now in: Process_start #023\n");
     /* Make sure the file existed and was a valid ELF file */
     KERNEL_ASSERT(file >= 0);
     KERNEL_ASSERT(elf_parse_header(&elf, file));
@@ -100,12 +121,14 @@ void process_start(process_id_t pid) {
     /* Trivial and naive sanity check for entry point: */
     KERNEL_ASSERT(elf.entry_point >= PAGE_SIZE);
 
+    kprintf("Now in: Process_start #021\n");
     /* Calculate the number of pages needed by the whole process
        (including userland stack). Since we don't have proper tlb
        handling code, all these pages must fit into TLB. */
     KERNEL_ASSERT(elf.ro_pages + elf.rw_pages + CONFIG_USERLAND_STACK_SIZE
-		  <= _tlb_get_maxindex() + 1);
+          <= _tlb_get_maxindex() + 1);
 
+    kprintf("Now in: Process_start #022\n");
     /* Allocate and map stack */
     for(i = 0; i < CONFIG_USERLAND_STACK_SIZE; i++) {
         phys_page = pagepool_get_phys_page();
@@ -114,6 +137,7 @@ void process_start(process_id_t pid) {
                (USERLAND_STACK_TOP & PAGE_SIZE_MASK) - i*PAGE_SIZE, 1);
     }
 
+    kprintf("Now in: Process_start #003\n");
     /* Allocate and map pages for the segments. We assume that
        segments begin at page boundary. (The linker script in tests
        directory creates this kind of segments) */
@@ -138,6 +162,7 @@ void process_start(process_id_t pid) {
     tlb_fill(my_entry->pagetable);
     _interrupt_set_state(intr_status);
 
+    kprintf("Now in: Process_start #004\n");
     /* Now we may use the virtual addresses of the segments. */
 
     /* Zero the pages. */
@@ -151,21 +176,22 @@ void process_start(process_id_t pid) {
     /* Copy segments */
 
     if (elf.ro_size > 0) {
-	/* Make sure that the segment is in proper place. */
+    /* Make sure that the segment is in proper place. */
         KERNEL_ASSERT(elf.ro_vaddr >= PAGE_SIZE);
         KERNEL_ASSERT(vfs_seek(file, elf.ro_location) == VFS_OK);
         KERNEL_ASSERT(vfs_read(file, (void *)elf.ro_vaddr, elf.ro_size)
-		      == (int)elf.ro_size);
+              == (int)elf.ro_size);
     }
 
     if (elf.rw_size > 0) {
-	/* Make sure that the segment is in proper place. */
+    /* Make sure that the segment is in proper place. */
         KERNEL_ASSERT(elf.rw_vaddr >= PAGE_SIZE);
         KERNEL_ASSERT(vfs_seek(file, elf.rw_location) == VFS_OK);
         KERNEL_ASSERT(vfs_read(file, (void *)elf.rw_vaddr, elf.rw_size)
-		      == (int)elf.rw_size);
+              == (int)elf.rw_size);
     }
 
+    kprintf("Now in: Process_start #005");
 
     /* Set the dirty bit to zero (read-only) on read-only pages. */
     for(i = 0; i < (int)elf.ro_pages; i++) {
@@ -177,6 +203,7 @@ void process_start(process_id_t pid) {
     tlb_fill(my_entry->pagetable);
     _interrupt_set_state(intr_status);
 
+    kprintf("Now in: Process_start #006");
     /* Initialize the user context. (Status register is handled by
        thread_goto_userland) */
     memoryset(&user_context, 0, sizeof(user_context));
@@ -261,19 +288,23 @@ void process_finish(int retval)
     vm_destroy_pagetable(thread->pagetable);
     thread->pagetable = NULL;
 
+    kprintf("process lololo end\n");
     thread_finish();
 
     kprintf("process finish end\n");
 }
 
+spinlock_t process_table_slock;
 int process_join(process_id_t pid)
 {
     int return_value;
     interrupt_status_t intr_status;
+    intr_status = _interrupt_disable();
+
+    spinlock_acquire(&process_table_slock);
     /* The process trying to join. */
     process_id_t parent = process_get_current_process();
 
-    intr_status = _interrupt_disable();
 
     kprintf("process.c parent %d child %d 01\n", parent, pid);
     kprintf("process.c child's parent: %d 02\n", process_table[pid].parent);
@@ -292,7 +323,10 @@ int process_join(process_id_t pid)
     kprintf("waiting for child to become zombi\n");
     /* Wait for the process to call process_finish and become a zombie. */
     while (process_table[pid].process_state != PROCESS_ZOMBIE) {
-        ;// kprintf("%d", process_table[pid].process_state);
+        spinlock_release(&process_table_slock);
+        thread_switch();
+        spinlock_acquire(&process_table_slock);
+        kprintf("%d", process_table[pid].process_state);
     }
     kprintf("\n");
 
@@ -301,6 +335,8 @@ int process_join(process_id_t pid)
     return_value = process_table[pid].exit_code;
     process_set_dead(pid); /* Kill the process. */
 
+
+    spinlock_release(&process_table_slock);
     _interrupt_set_state(intr_status);
 
     return return_value;
