@@ -310,7 +310,7 @@ void *memcpy(void *dest, const void *src, size_t n) {
 
 /* Write c to standard output.  Returns a positive integer on
    success. */
-int putc(char c)
+int my_putc(char c)
 {
   return syscall_write(stdout, &c, 1);
 }
@@ -373,20 +373,20 @@ ssize_t readline(char *s, size_t size)
     switch (c) {
     case '\r': /* Treat as newline */
     case '\n':
-      putc('\n');
+      my_putc('\n');
       goto stop;
       break;
     case 127:
       if (count > 0) {
-        putc('\010');
-        putc(' ');
-        putc('\010');
+        my_putc('\010');
+        my_putc(' ');
+        my_putc('\010');
         count--;
       }
       break;
     default:
       if (count<size-1) {
-        putc(s[count++]=c);
+        my_putc(s[count++]=c);
       }
     }
   }
@@ -413,7 +413,7 @@ ssize_t readline(char *s, size_t size)
 static void printc(char *buf, char c, int flags) {
   if (flags & FLAG_TTY) {
     /* do not output (terminating) zeros to TTY */
-    if (c != '\0') putc(c);
+    if (c != '\0') my_putc(c);
   } else
     *buf = c;
 }
