@@ -10,6 +10,9 @@ queue_t q;
 
 void* putNget(void* n){
   queue_put(&q,n);
+  int x = 5000000;
+  int y = 0;
+  while(x--){y++;}
   pthread_exit(queue_get(&q));
 
 }
@@ -17,7 +20,7 @@ void* putNget(void* n){
 int main(int argc, char const *argv[])
 {
     int i = 0;
-    const int n = 50;
+    const int n = 5000;
 
     queue_init(&q);
 
@@ -30,26 +33,25 @@ int main(int argc, char const *argv[])
     for(i;i<n;i++){
       node_arr[i].a = i;
       pthread_create(&(thr[i]), NULL, putNget, &node_arr[i]);
-      //queue_put(&q,&node_arr[i]);
     }
-
-    for(i;i>=0;i--){
+    sleep(1);
+    printf("NOW JOINING\n");
+    i = 0;
+    for(i;i<n;i++){
       pthread_join(thr[i],&ret);
       printf("output test %d\n",((int_struct*)ret)->a);
     }
 
 
-    // printf("input test%p\n",(void*)&b);
+    // for(i;i<n;i++){
+    //   node_arr[i].a = i;
+    //   queue_put(&q,&node_arr[i]);
+    // }
     //
-    //
-    //
-    // int_struct* retur = (int_struct*) queue_get(&q);
-    // retur = (int_struct*) queue_get(&q);
-    //
-    // printf("output test%p\n",(void*)retur);
-    // printf("Validatig\n");
-    // if (retur->a == c.a){
-    //   printf("Worked!!\n");
+    // i = 0;
+    // for(i;i<n;i++){
+    //   ret = queue_get(&q);
+    //   printf("output test %d\n",((int_struct*)ret)->a);
     // }
 
     return 0;
