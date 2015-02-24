@@ -27,23 +27,27 @@ user_sem_t * syscall_sem_open(char const *name, int value)
     user_sem_t *new_sem;
 
     if (value >= 0) {
-        if ((new_sem = get_semaphore(name)) != NULL)
+        if ((new_sem = get_semaphore(name)) != NULL){
             new_sem->kernel_semaphore = semaphore_create(value);
             new_sem->sem_status = SEM_TAKEN;
             new_sem->name = name;
-
             return new_sem;
-        else
-            return user_sem_t->kernel_semaphore;
+          }
+        else{
+
+        }
+
 
         /* Create semaphore with value.  If already exist return NULL. */
     } else {
         return NULL;
     }
+return NULL;
 }
 
 user_sem_t * get_semaphore(char const *name){
-  int i;
+  //int i;
+  name = name;
 
   // for (i = 0; i < SEM_MAX_SEMAPHORES; i++){
   //     if(strcmp(name, semaphores[i].name)){
