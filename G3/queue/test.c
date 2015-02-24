@@ -20,7 +20,7 @@ void* putNget(void* n){
 int main(int argc, char const *argv[])
 {
     int i = 0;
-    const int n = 5000;
+    const int n = 20000;
 
     queue_init(&q);
 

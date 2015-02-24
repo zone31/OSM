@@ -57,9 +57,11 @@ void * queue_get(queue_t *q) {
         q->head = old->next;
     }
 
-    free(old);
+
 
     pthread_mutex_unlock(&queue_get_lock);
 
+    free(old);
+    
     return item;
 }
