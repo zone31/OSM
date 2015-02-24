@@ -2,58 +2,89 @@
 #include "semaphore.h"
 
 /* An array where we store the userland semaphores. */
-user_sem_t semaphores[SEM_MAX_SEMAPHORES];
+usr_sem_t semaphores[SEM_MAX_SEMAPHORES];
 
 void sem_user_init(void)
 {
     int i;
 
-    for (i = 0; i < SEM_MAX_SEMAPHORES; i++)
-        semaphores[i].sem_status = SEM_FREE;
+    for (i = 0; i < SEM_MAX_SEMAPHORES; i++){
+        semaphores[i].status = SEM_NONALLOCED;
+    }
 }
 
 // int hash(const char *str)
 // {
 //     int hash = 1234;
-//
+
 //     while (*str != '\0')
-//         sum *= *str;
-//
-//     return sum % SEM_MAX_SEMAPHORES;
+//         hash *= *str++;
+
+//     return hash % SEM_MAX_SEMAPHORES;
 // }
 
-user_sem_t * syscall_sem_open(char const *name, int value)
+usr_sem_t * syscall_sem_open(char const *name, int value)
 {
-    user_sem_t *new_sem;
+    usr_sem_t *new_sem;
 
     if (value >= 0) {
-        if ((new_sem = get_semaphore(name)) != NULL){
-            new_sem->kernel_semaphore = semaphore_create(value);
-            new_sem->sem_status = SEM_TAKEN;
-            new_sem->name = name;
-            return new_sem;
-          }
-        else{
-
-        }
-
 
         /* Create semaphore with value.  If already exist return NULL. */
+        if ((new_sem = get_semaphore(name)) != NULL){
+            new_sem->kernel_semaphore = semaphore_create(value);
+            new_sem->status = SEM_ALLOCED;
+            new_sem->name = name;
+            return new_sem;
+        }
+        else{
+            return NULL;
+        }
     } else {
-        return NULL;
+        return get_semaphore(name);   
     }
-return NULL;
 }
 
-user_sem_t * get_semaphore(char const *name){
-  //int i;
-  name = name;
+usr_sem_t *get_semaphore(char const *name){
+    int i;
 
-  // for (i = 0; i < SEM_MAX_SEMAPHORES; i++){
-  //     if(strcmp(name, semaphores[i].name)){
-  //       return strcmp(name, semaphores[i];
-  //     }
-  //   }
-  return NULL;
+    for (i = 0; i < SEM_MAX_SEMAPHORES; i++){
+        if(stringcmp(name, semaphores[i].name) == 0){
+            return &semaphores[i];
+        }
+    }
+    return NULL;
+}
 
+usr_sem_t *alloc_semaphore(char const *name){
+    int i;
+
+    if (get_semaphore(name) == NULL){
+        for (i = 0; i < SEM_MAX_SEMAPHORES; i++){
+            if(semaphores[i].status == SEM_NONALLOCED){
+                semaphores[i].status = SEM_ALLOCED;
+                return &semaphores[i];
+            }
+        }
+    }
+    return NULL;
+}
+
+int syscall_sem_destroy(usr_sem_t* handle){
+    handle->status = SEM_NONALLOCED;
+    return 0;
+}
+
+int syscall_sem_v(usr_sem_t* handle){
+    if (handle == NULL){ return HANDLE_IS_NULL }
+
+    semaphore_V(handle->kernel_semaphore);
+
+    return 0;
+}
+
+int syscall_sem_p(usr_sem_t* handle){
+    if (handle == NULL){ return HANDLE_IS_NULL }
+
+    semaphore_P(handle->kernel_semaphore);
+    return 0;
 }

@@ -41,7 +41,7 @@
 
 #include "proc/syscall.h"
 #include "tests/lib.h"
-
+#include "proc/semaphore.h"
 
 /* Halt the system (sync disks and power off). This function will
  * never return. 
@@ -848,6 +848,26 @@ int atoi(const char *nptr)
     retval = retval * 10 + (nptr[i] - '0');
   }
   return retval;
+}
+
+void syscall_exit(int retval)
+{
+    _syscall(SYSCALL_EXIT, (uint32_t)retval, 0, 0);
+}
+
+usr_sem_t* syscall_sem_open(const char* name, int value)
+{
+    return (usr_sem_t*) _syscall(SYSCALL_SEM_OPEN,(uint32_t) name, (uint32_t) value,0);
+}
+
+int syscall_sem_procure(usr_sem_t* handle)
+{
+    return (int) _syscall(SYSCALL_SEM_PROCURE,(uint32_t) handle,0,0);
+}
+
+int syscall_sem_vacate(usr_sem_t* handle)
+{
+    return (int) _syscall(SYSCALL_SEM_VACATE,(uint32_t) handle,0,0);
 }
 
 #endif
