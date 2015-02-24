@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 pthread_mutex_t queue_put_lock;
 pthread_mutex_t queue_get_lock;
@@ -19,14 +20,13 @@ void queue_put(queue_t *q, void *item)
     assert(new != NULL);
 
     pthread_mutex_lock(&queue_put_lock);
-
+    new->item = item;
+    new->next = NULL;
     if (QUEUE_EMPTY(q)) {
+        printf("IS EMPTY\n");
         q->head = new;
         q->tail = new;
     } else {
-        new->item = item;
-        new->next = NULL;
-
         /* Insert on the tail. */
         q->tail->next = new;
         q->tail = new;

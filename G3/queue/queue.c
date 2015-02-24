@@ -49,21 +49,3 @@ void *queue_get(queue_t *q) {
 
 	return item;
 }
-
-int main(int argc, char **argv) {
-	queue_t q;
-
-	queue_init(&q);
-
-	int val = 42;
-
-	queue_put(&q, &val);
-	queue_put(&q, &val);
-
-	assert(42 == *(int *)queue_get(&q));
-	assert(42 == *(int *)queue_get(&q));
-	assert(NULL == queue_get(&q));
-	assert(NULL == queue_get(&q));
-
-	return 0;
-}
