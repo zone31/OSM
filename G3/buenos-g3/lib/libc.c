@@ -277,7 +277,7 @@ int atoi(const char *s)
     return value;
 }
 
-int strlen(const char *str)
+int stringlen(const char *str)
 {
     int l=0;
 

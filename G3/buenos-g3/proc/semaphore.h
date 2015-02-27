@@ -15,7 +15,9 @@ typedef struct {
     semaphore_t *kernel_semaphore;
     semstatus status;
     const char *name;
-} usr_sem_t;
+} usr_sem_t_wrapper;
+
+typedef void usr_sem_t;
 
 #define HANDLE_IS_NULL -1
 #define SUCCESS 0
