@@ -10,9 +10,6 @@ queue_t q;
 
 void* putNget(void* n){
   queue_put(&q,n);
-  int x = 5000000;
-  int y = 0;
-  while(x--){y++;}
   pthread_exit(queue_get(&q));
 
 }
@@ -20,7 +17,7 @@ void* putNget(void* n){
 int main(int argc, char const *argv[])
 {
     int i = 0;
-    const int n = 20000;
+    const int n = 2000;
 
     queue_init(&q);
 
@@ -34,7 +31,7 @@ int main(int argc, char const *argv[])
       node_arr[i].a = i;
       pthread_create(&(thr[i]), NULL, putNget, &node_arr[i]);
     }
-    sleep(1);
+    //sleep(1);
     printf("NOW JOINING\n");
     i = 0;
     for(i;i<n;i++){

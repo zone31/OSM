@@ -1,67 +1,54 @@
-#include "queue.h"
+#include "our_queue.h"
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-pthread_mutex_t queue_put_lock ;
-pthread_mutex_t queue_get_lock ;
 
 void queue_init(queue_t *q)
 {
-    q->head = NULL;
-    q->tail = NULL;
+  node_t *new = malloc(sizeof(node_t));
+  assert(new != NULL);
+
+  new->next = NULL;
+  q->head = q->tail = new;
 }
 
 void queue_put(queue_t *q, void *item)
 {
-    pthread_mutex_lock(&queue_put_lock);
-    node_t *new = malloc(sizeof(node_t));
+    pthread_mutex_lock(&q->queue_put_lock);
 
+    node_t *new = malloc(sizeof(node_t));
     assert(new != NULL);
 
+  	new->item = item;
+  	new->next = NULL;
 
-    new->item = item;
-    new->next = NULL;
-    if (q->head == NULL || q->tail == NULL) {
+  	/* add the new node to the tail */
+  	q->tail->next = new;
+  	q->tail = new;
 
-        q->head = new;
-        q->tail = new;
-    } else {
-        /* Insert on the tail. */
-        q->tail->next = new;
-        q->tail = new;
-    }
-
-    pthread_mutex_unlock(&queue_put_lock);
+    pthread_mutex_unlock(&q->queue_put_lock);
 }
 
 void * queue_get(queue_t *q) {
-    node_t *old;
-    void *item;
+    pthread_mutex_lock(&q->queue_get_lock);
+    node_t *old = q->head;
 
-    pthread_mutex_lock(&queue_get_lock);
+  	/* note that the head contains a 'dummy' node. That's why we test
+  	 * old->next. */
+  	if (old->next == NULL) {
+  		return NULL; /* queue was empty */
+  	}
 
-    if (QUEUE_EMPTY(q)){
-        return NULL;
-    }
+  	void *item = old->next->item;
 
+  	/* update the head and free the old memory */
+  	q->head = old->next;
 
-    old = q->head;
-    item = q->head->item;
-
-    if (q->head->next == NULL) {
-        q->head = NULL;
-        q->tail = NULL;
-    } else {
-        q->head = old->next;
-    }
-
-
-
-    pthread_mutex_unlock(&queue_get_lock);
+    pthread_mutex_unlock(&q->queue_get_lock);
 
     free(old);
-    
+
     return item;
 }
