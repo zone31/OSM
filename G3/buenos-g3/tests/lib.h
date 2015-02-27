@@ -47,7 +47,7 @@
 #define stderr 2
 
 /* User semaphore */
-typedef void usr_sem_t;
+/* typedef void usr_sem_t; */
 
 /* POSIX-like integer types */
 typedef uint8_t byte;

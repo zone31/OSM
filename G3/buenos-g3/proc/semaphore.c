@@ -75,7 +75,7 @@ int syscall_sem_destroy(usr_sem_t* handle){
 }
 
 int syscall_sem_v(usr_sem_t* handle){
-    if (handle == NULL){ return HANDLE_IS_NULL }
+    if (handle == NULL){ return HANDLE_IS_NULL; }
 
     semaphore_V(handle->kernel_semaphore);
 
@@ -83,7 +83,7 @@ int syscall_sem_v(usr_sem_t* handle){
 }
 
 int syscall_sem_p(usr_sem_t* handle){
-    if (handle == NULL){ return HANDLE_IS_NULL }
+    if (handle == NULL){ return HANDLE_IS_NULL; }
 
     semaphore_P(handle->kernel_semaphore);
     return 0;

@@ -141,6 +141,7 @@ void semaphore_destroy(semaphore_t *sem)
 
 void semaphore_P(semaphore_t *sem)
 {
+    kprintf("Semaphore taken %d",sem->value);
     interrupt_status_t intr_status;
 
     intr_status = _interrupt_disable();
@@ -170,6 +171,7 @@ void semaphore_P(semaphore_t *sem)
 
 void semaphore_V(semaphore_t *sem)
 {
+    kprintf("Semaphore released %d",sem->value);
     interrupt_status_t intr_status;
     
     intr_status = _interrupt_disable();

@@ -190,9 +190,10 @@ int syscall_delete(const char *filename)
 #ifdef PROVIDE_STRING_FUNCTIONS
 
 /* Return the length of the string pointed to by s. */
-size_t strlen(const char *s)
+int strlen(const char *s)
 {
-  size_t i;
+  /* size_t i; defined differently in lib/libc.h */
+  int i;
   for (i=0; s[i]; i++);
   return i;
 }

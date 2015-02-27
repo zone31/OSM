@@ -126,13 +126,13 @@ void syscall_handle(context_t *user_context)
         V0 = syscall_join((process_id_t) A1);
         break;
     case SYSCALL_SEM_OPEN:
-        V0 = syscall_sem_open((char const *)A1, (int) A2);
+        V0 = (int)syscall_sem_open((char const *)A1, (int) A2);
         break;
     case SYSCALL_SEM_PROCURE:
-        V0 = syscall_sem_p((usr_sem_t *)A1);
+        V0 = (int)syscall_sem_p((usr_sem_t *)A1);
         break;
     case SYSCALL_SEM_VACATE:
-        V0 = syscall_sem_p((usr_sem_t *)A1);
+        V0 = (int)syscall_sem_p((usr_sem_t *)A1);
         break;
     default:
         KERNEL_PANIC("Unhandled system call\n");
