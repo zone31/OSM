@@ -2,7 +2,7 @@
 #include "semaphore.h"
 
 /* An array where we store the userland semaphores. */
-usr_sem_t semaphores[SEM_MAX_SEMAPHORES];
+usr_sem_t_wrapper semaphores[SEM_MAX_SEMAPHORES];
 
 void sem_user_init(void)
 {
@@ -25,7 +25,7 @@ void sem_user_init(void)
 
 usr_sem_t * syscall_sem_open(char const *name, int value)
 {
-    usr_sem_t *new_sem;
+    usr_sem_t_wrapper *new_sem;
 
     if (value >= 0) {
 
@@ -40,7 +40,7 @@ usr_sem_t * syscall_sem_open(char const *name, int value)
             return NULL;
         }
     } else {
-        return get_semaphore(name);   
+        return get_semaphore(name);
     }
 }
 
@@ -62,7 +62,7 @@ usr_sem_t *alloc_semaphore(char const *name){
         for (i = 0; i < SEM_MAX_SEMAPHORES; i++){
             if(semaphores[i].status == SEM_NONALLOCED){
                 semaphores[i].status = SEM_ALLOCED;
-                return &semaphores[i];
+                return (usr_sem_t *)&semaphores[i];
             }
         }
     }
@@ -70,14 +70,16 @@ usr_sem_t *alloc_semaphore(char const *name){
 }
 
 int syscall_sem_destroy(usr_sem_t* handle){
-    handle->status = SEM_NONALLOCED;
+    usr_sem_t_wrapper *handle_wrapper = (usr_sem_t_wrapper *)handle;
+    handle_wrapper->status = SEM_NONALLOCED;
     return 0;
 }
 
 int syscall_sem_v(usr_sem_t* handle){
     if (handle == NULL){ return HANDLE_IS_NULL; }
+    usr_sem_t_wrapper *handle_wrapper = (usr_sem_t_wrapper *)handle;
 
-    semaphore_V(handle->kernel_semaphore);
+    semaphore_V(handle_wrapper->kernel_semaphore);
 
     return 0;
 }
@@ -85,6 +87,7 @@ int syscall_sem_v(usr_sem_t* handle){
 int syscall_sem_p(usr_sem_t* handle){
     if (handle == NULL){ return HANDLE_IS_NULL; }
 
-    semaphore_P(handle->kernel_semaphore);
+    usr_sem_t_wrapper *handle_wrapper = (usr_sem_t_wrapper *)handle;
+    semaphore_P(handle_wrapper->kernel_semaphore);
     return 0;
 }

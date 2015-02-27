@@ -47,7 +47,7 @@
 #define stderr 2
 
 /* User semaphore */
-/* typedef void usr_sem_t; */
+typedef void usr_sem_t;
 
 /* POSIX-like integer types */
 typedef uint8_t byte;
@@ -134,5 +134,10 @@ void *realloc(void *ptr, size_t size);
 #ifdef PROVIDE_MISC
 int atoi(const char *nptr);
 #endif
+
+usr_sem_t * syscall_sem_open(char const *name, int value);
+int syscall_sem_p(usr_sem_t *handle);
+int syscall_sem_v(usr_sem_t *handle);
+int syscall_sem_destroy(usr_sem_t *handle);
 
 #endif /* BUENOS_USERLAND_LIB_H */

@@ -86,7 +86,7 @@ void bootargs_init(void)
 	bootargs_values[i].key = NULL;
     }
     
-    l = strlen(bootarg_area);
+    l = stringlen(bootarg_area);
     value_area = (char *) kmalloc(l+1);
     bmemcopy(value_area, bootarg_area, l+1);
 
