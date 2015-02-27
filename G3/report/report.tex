@@ -1,0 +1,219 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+\usepackage{graphicx} % \includegraphics
+\usepackage{fancyhdr, amsmath, amssymb, comment, caption, placeins, subfigure,
+    fixltx2e, changepage, listings, courier, soul, hyperref, geometry,
+    enumerate, listings, enumitem}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+
+\author{\Large{Magnus N\o rskov Stavngaard} \\
+		\texttt{magnus@stavngaard.dk}
+		\\\\
+		\Large{Mark Jan Jacobi} \\
+        \texttt{mark@jacobi.pm}
+		 \\\\
+		\Large{Mads Ynddal} \\
+		\texttt{mynddal@me.com}
+}
+
+\lstdefinestyle{customc} {
+    belowcaptionskip=1\baselineskip,
+    breaklines=true,
+    xleftmargin=\parindent,
+    language=C,
+    showstringspaces=false,
+    keywordstyle=\bfseries\color{green!40!black},
+    morekeywords={size_t,node,heap},
+    commentstyle=\itshape\color{purple!40!black},
+    identifierstyle=\color{blue},
+    stringstyle=\color{orange},
+}
+
+\lstset{
+basicstyle=\footnotesize,
+language=C,
+numbers=none}
+\lstset{literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+    {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+    {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+    {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+    {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+    {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+    {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+    {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+    {€}{{\EUR}}1 {£}{{\pounds}}1
+}
+
+\title{
+    \vspace{3cm}
+    \Huge{OSM} \\
+    \Large{G2}
+}
+
+\pagestyle{fancy}
+\lhead{\small{Magnus S. Mark J. Mads Y.}}
+\chead{\date{\today}}
+\rhead{University of Copenhagen}
+% \lfoot{}
+% \cfoot{}
+% \rfoot{}
+
+% Change indent length of paragraph not after a header.
+\setlength{\parindent}{0cm}
+
+% Remove page numbering in the beginning
+\pagenumbering{gobble}
+
+\begin{document}
+    %% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+    %% `natbio-farve` to use SCIENCE's new colors and logo.
+    \AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]
+        {include/ku-farve}}}
+    \AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]
+        {include/ku-farve}}}
+
+    %% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+    \AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
+
+    \clearpage
+    \maketitle
+    \thispagestyle{empty}
+
+    \newpage
+
+    %\tableofcontents
+
+    %\newpage
+
+    \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
+
+    \section{Types and functions for userland processes in Buenos}
+    In this assignment we were asked to implement userland processes and the
+    library the kernel use when managing the userland processes.  We first
+    implemented a datastructure in \textit{proc/process.h} representing a
+    userland process.
+
+    \begin{lstlisting}[style=customc]
+typedef struct {
+    process_id_t pid;                        /* ID of this process. */
+    char executable[PROCESS_MAX_FILELENGTH]; /* The name of the file run. */
+    int exit_code;                           /* The return value. */
+    process_state_t process_state;           /* The state of the process. */
+    process_id_t parent;                     /* ID of the parent process. */
+} process_control_block_t;
+    \end{lstlisting}
+
+    A process contains a name of an executable file that it executes.  It
+    contains a unique id used to identify it in a table of all processes.  It
+    contains an exit code which is set when the process exits. It contains a
+    process state, which we define by an enumerator, examples of values is
+    \texttt{PROCESS\_ZOMBIE}, \texttt{PROCESS\_DEAD}, \texttt{PROCESS\_RUNNING}.
+    Lastly a process contains a pid which references its parent process. \\
+
+    In the file \textit{proc/process.c} we implemented the function managing the
+    process table.  When a user creates a process, he makes the system call
+    \texttt{SYSCALL\_EXEC}, this system call calls the function
+    \texttt{process\_spawn} with a file name supplied to the system in the
+    \texttt{A1 MIPS} register.  Process spawn finds a free space in the table of
+    processes and set that process' state to \texttt{PROCESS\_INIT}, it also set
+    the parent of the process as the result of calling
+    \texttt{process\_get\_current\_process}.  Then the function call
+    \texttt{thread\_create} with a function pointer to the function
+    \texttt{process\_start} and the id of that process.  This function call
+    creates a new thread to run the process in and defines what executable to
+    run in the thread.  Lastly \texttt{process\_spawn} call \texttt{thread\_run}
+    to start the execution of the process. \\
+
+    When a process has been started a process need to call
+    \texttt{process\_finish} to stop executing.  This is done by making the
+    system call \texttt{SYSCALL\_EXIT} syscall exit takes an integer return
+    value and calls the function \texttt{process\_finish} to end the process. In
+    \texttt{process\_finish} the process state of the process is set to
+    \texttt{PROCESS\_ZOMBIE}, we don't make the process \texttt{PROCESS\_FREE}
+    as the parent process might want to read the return value.  We then clean up
+    the thread by calling \texttt{thread\_finish} and then the function
+    returns. \\
+
+    When a parent process starts the execution of a child process it might later
+    want to join with the process.  It does so by making the system call
+    \texttt{PROCESS\_JOIN}, process join takes the id of the process the parent
+    want to join with as a parameter and calls the \texttt{process\_join}
+    function.  In the function we first get the current process running by
+    calling \texttt{process\_get\_current\_process}, this is the process that
+    called the join function and we check if this process is the parent of the
+    process it tries to join with.  If this is not the case or if the process
+    tries to join with a non existing process we return
+    \texttt{PROCESS\_ILLEGAL\_JOIN}.  If this is not the case we check if the
+    process the parent is trying to join with is in the \texttt{PROCESS\_ZOMBIE}
+    state, if this is the case we know the process is finished and we can just
+    extract the return value.  If it is not the case we start waiting for the
+    child process to finish and change state to \texttt{PROCESS\_ZOMBIE}. \\
+
+    Before the OS start the first process the OS must call the function
+    \texttt{process\_init} which simply loops through all the processes and sets
+    them as \texttt{PROCESS\_DEAD}.
+
+    \section{System calls for user-process control in Buenos}
+    As described in the earlier section a user can control the processes by
+    making use of system calls.  The three system calls used to control
+    processes are, \texttt{SYSCALL\_EXEC}, \texttt{SYSCALL\_EXIT} and
+    \texttt{SYSCALL\_JOIN}.  The tree syscalls are handled in the switch case in
+    the file \textit{proc/syscall.c}
+
+    \begin{lstlisting}[style=customc]
+switch(A0) {
+
+(...)
+
+case SYSCALL_EXEC:
+    V0 = syscall_exec((const char *) A1);
+    break;
+case SYSCALL_EXIT:
+    syscall_exit((int) A1);
+    break;
+case SYSCALL_JOIN:
+    V0 = syscall_join((int) A1);
+    break;
+
+(...)
+
+}
+    \end{lstlisting}
+
+    The actual functions are defined in the file
+    \textit{kernel/process\_control.c} as,
+
+    \begin{lstlisting}[style=customc]
+int syscall_exec(const char *filename)
+{
+    return process_spawn(filename);
+}
+
+void syscall_exit(int retval)
+{
+    process_finish(retval);
+}
+
+int syscall_join(int pid)
+{
+    return process_join(pid);
+}
+    \end{lstlisting}
+
+    All the functions are oneliners mapping directly to function described in
+    the previous section.
+
+    \section{Our implementation}
+    We implemented the syscalls and processes described above, but somehow the test we made did not seem to work. If we print the test's treads, and make them print something, the print order in the terminal is not as we expected. It seems that a tread will go all the way to its return statement, and then the next prints will be the started treads.
+    \\
+    syscall\_join seems not to join the treads, but sometimes the results are correct anyways (Run test npj.c)
+    
+
+\end{document}
