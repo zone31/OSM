@@ -123,10 +123,10 @@ typedef struct queue {
 } queue_t;
 \end{lstlisting}
 \textit{Description} \\
-The queue type contains a pointer to the head and tail of the node\_t linked list. Furthermore, it also 
+The queue type contains a pointer to the head and tail of the node\_t linked list. Furthermore, it also
 contains two pthread\_mutex\_t locks. These are used to lock the queue when adding or removing elements
 from the linked list. The reason double pointers are used, instead of only the last element of the linked list, is because the function for returning the first element would have to traverse the full linked list.
-When using 2 pointers, we do not need to traverse the list, and we don't need both top and bottom element to return the top. 
+When using 2 pointers, we do not need to traverse the list, and we don't need both top and bottom element to return the top.
 
 
 
@@ -137,7 +137,6 @@ void *queue_get(queue_t *q);
 \textit{Description} \\
 Returns the first element of the queue, then sets the queue head element to the next in the list.
 Also frees the memory.
-
 
 
 \begin{lstlisting}[style=customc]
@@ -157,9 +156,152 @@ Creates an empty queue element, with one node element inside. This is done so th
 \subsection{Thread locks}
 The put and get functions use a mutex thread lock. This is done so multiple threads can't have access to the same element in the linked list.
 \subsection{The test}
-The test First generates a thousand threads. These threads will put and get the elements instant 
+The test First generates a thousand threads. These threads will put and get the elements instant
 
 \section{Userland semaphores for Buenos}
+    Our implementation of semaphores in the buenos operating system is mainly
+    located in the files \texttt{proc/semaphore.c} and
+    \texttt{proc/semaphore.h}.  Our implementation is made around a
+    datastructure representing a semaphore located in \texttt{proc/semaphore.h},
+
+    \begin{lstlisting}[style=customc]
+typedef struct {
+    semaphore_t *kernel_semaphore; /* A pointer to the kernel impl. */
+    semstatus status; /* The status of the semaphore. */
+    char name[SEM_NAME_MAX_LENGTH]; /* The name of the semaphore. */
+    int ident; /* The position in the array of semaphores. */
+    int initial_value;
+    spinlock_t slock;
+} usr_sem_t_wrapper;
+    \end{lstlisting}
+
+    The datastructure contains,
+
+    \begin{itemize}
+        \item a pointer to a kernel semaphore, this is where the actual
+            implementation of the semaphore is.
+        \item a semstatus status, where we keep the current status of the
+            semaphore.  The semaphore can be either \texttt{SEM\_ALLOCED} or
+            \texttt{SEM\_NONALLOCED} depending on it being in use or not.
+        \item a char array of size \texttt{SEM\_NAME\_MAX\_LENGTH} containing the
+            name of the semaphore.  The length of a given name is limited to
+            the size of this array.  The name is used to find a specific
+            semaphore.
+        \item an integer ident.  This integer is used to obscure where a
+            semaphore is actually located so a user cannot tamper with it. (this
+            will be described in more detail later.)
+        \item an integer initial\_value.  This is used to compare the current
+            value of a semaphore with the initial value to find out if it is
+            alright to remove a semaphore or if it is in use.
+        \item a spinlock slock, used to make sure that no process is running
+            concurrently with a semaphore being deleted as this can lead to
+            errors.
+    \end{itemize}
+
+    This structure is never returned explicitly to the user, but is only used
+    internally in the kernel.  The structure returned to the used is defined in
+    \texttt{tests/lib.h} as,
+
+    \begin{lstlisting}[style=customc]
+typedef void usr_sem_t;
+    \end{lstlisting}
+
+    this means that when we in a function returns a pointer to a
+    \texttt{usr\_sem\_t}, we are actually returning a \texttt{void} pointer,
+    which can be anything.  In our implementation the void pointer actually
+    points to the integer ident from the semaphore structure, this integer is
+    then an index in an array of semaphores which we holds.  A user therefore
+    only has direct access to a other semaphores if he/she knows where the array
+    starts.
+
+    \subsection{Operations on Semaphores}
+    The operations that can be performed on the semaphores are,
+
+    \begin{lstlisting}[style=customc]
+usr_sem_t * syscall_sem_open(char const *name, int value);
+int syscall_sem_p(usr_sem_t *handle);
+int syscall_sem_v(usr_sem_t *handle);
+int syscall_sem_destroy(usr_sem_t *handle);
+void sem_user_init(void);
+    \end{lstlisting}
+
+    where the functions \texttt{syscall\_sem\_open}, \texttt{syscall\_sem\_p},
+    \texttt{syscall\_sem\_v} and \texttt{syscall\_sem\_destroy} is available for
+    users to call and \texttt{sem\_user\_init} only can be reached by the
+    kernel.  We have implemented the system calls in the file
+    \texttt{tests/lib.c} with system call numbers located in
+    \texttt{proc/syscall.h}.  The implementation of \texttt{syscall\_sem\_open}
+    in the \texttt{tests/lib.c} is shown here, the rest of the syscalls is very
+    similar. \\
+
+    The syscall is implemented by,
+
+    \begin{lstlisting}[style=customc]
+usr_sem_t* syscall_sem_open(const char* name, int value)
+{
+    return (usr_sem_t*) _syscall(SYSCALL_SEM_OPEN, (uint32_t) name,
+        (uint32_t) value, 0);
+}
+    \end{lstlisting}
+
+    We call the \texttt{\_syscall} function with the code
+    \texttt{SYSCALL\_SEM\_OPEN}, which makes the switch in
+    \texttt{proc/syscall.c} handle a \texttt{syscall\_sem\_open}. \\
+
+    We will now describe the actual implementation of the function operating on
+    a semaphore.
+
+    \subsection{syscall\_sem\_open}
+    To create a new semaphore or get an already existing semaphore
+    \texttt{syscall\_sem\_open} is called.  The function takes two parameters,
+    a char const pointer and an integer.  The char const pointer is used to
+    identify a semaphore and is saved in the structure representing the
+    semaphore.  The value is used for two things, if the value is under 0 it is
+    discarded and the function searches for a semaphore of the given name, if
+    value is greater or equal to 0 a new semaphore is created with that value.
+    The code is,
+
+    \begin{lstlisting}[style=customc]
+usr_sem_t * syscall_sem_open(char const *name, int value)
+{
+    if (value >= 0) {
+        return &(create_semaphore(name, value)->ident);
+    } else {
+        return &(get_semaphore(name)->ident);
+    }
+}
+    \end{lstlisting}
+
+    To create a new semaphore we simply loop through our array of semaphores and
+    find a semaphore where the status is equal to \texttt{SEM\_NONALLOCED}.  We
+    then change the status and set the name as the given name and initialize the
+    kernel semaphore with the value given.  If any error occurs we return a
+    \texttt{NULL} pointer. \\
+
+    To find a already existing semaphore we search through the array of
+    semaphores for a similar name as the one given.  If it is found, we return
+    a pointer to that semaphore, if not we return a \texttt{NULL} pointer.
+
+    \subsection{syscall\_sem\_init}
+    This function can only be called from the kernel, the function has to be
+    called before any userland semaphores are used.  The function is called from
+    \texttt{init/main.c}.  The function initializes all semaphores to be
+    unalloced, their names to be a zero byte and their ident to be their
+    position in the array.  The function is defined as,
+
+    \begin{lstlisting}[style=customc]
+void sem_user_init(void)
+{
+    int i;
+
+    for (i = 0; i < SEM_MAX_SEMAPHORES; i++){
+        semaphores[i].status = SEM_NONALLOCED;
+        semaphores[i].name[0] = '\0';
+        semaphores[i].ident = i;
+    }
+}
+    \end{lstlisting}
+
 \subsection{syscall\_sem\_p}
 To \emph{procure} (reserve) a resource, we implemented the \emph{syscall\_sem\_p(handle)} system call. It takes a semaphore handle as argument, that was previously returned by the \emph{syscall\_sem\_open(name, value)} call. The handle is used only internally by the userland semaphores. The kernel semaphore is hidden inside the \emph{struct usr\_sem\_t\_wrapper}.
 

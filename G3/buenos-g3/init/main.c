@@ -139,7 +139,7 @@ void init_startup_thread(uint32_t arg)
     if (pid < 0) {
         KERNEL_PANIC("Couldn't fit initial program in process table.\n");
     }
-    process_join(pid);
+    process_join(pid);
 
     /* The current process_start() should never return. */
     KERNEL_PANIC("Run out of initprog.\n");
