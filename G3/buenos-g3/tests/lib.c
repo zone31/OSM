@@ -44,7 +44,7 @@
 #include "proc/semaphore.h"
 
 /* Halt the system (sync disks and power off). This function will
- * never return. 
+ * never return.
  */
 void syscall_halt(void)
 {
@@ -67,8 +67,8 @@ int syscall_exec(const char *filename)
  */
 int syscall_execp(const char *filename, int argc, const char **argv)
 {
-    return (int)_syscall(SYSCALL_EXEC, (uint32_t)filename, 
-                         (uint32_t) argc, 
+    return (int)_syscall(SYSCALL_EXEC, (uint32_t)filename,
+                         (uint32_t) argc,
                          (uint32_t) argv);
 }
 
@@ -126,7 +126,7 @@ int syscall_open(const char *filename)
 
 
 /* Close the open file identified by 'filehandle'. Zero will be returned
- * success, other values indicate errors. 
+ * success, other values indicate errors.
  */
 int syscall_close(int filehandle)
 {
@@ -147,7 +147,7 @@ int syscall_read(int filehandle, void *buffer, int length)
 
 
 /* Set the file position of the open file identified by 'filehandle'
- * to 'offset'. Returns 0 on success or a negative value on error. 
+ * to 'offset'. Returns 0 on success or a negative value on error.
  */
 int syscall_seek(int filehandle, int offset)
 {
@@ -168,7 +168,7 @@ int syscall_write(int filehandle, const void *buffer, int length)
 
 
 /* Create a file with the name 'filename' and initial size of
- * 'size'. Returns 0 on success and a negative value on error. 
+ * 'size'. Returns 0 on success and a negative value on error.
  */
 int syscall_create(const char *filename, int size)
 {
@@ -177,7 +177,7 @@ int syscall_create(const char *filename, int size)
 
 
 /* Remove the file identified by 'filename' from the file system it
- * resides on. Returns 0 on success or a negative value on error. 
+ * resides on. Returns 0 on success or a negative value on error.
  */
 int syscall_delete(const char *filename)
 {
@@ -439,7 +439,7 @@ static int print_uint(char *buf,
   int i = 0, written = 0;
 
   if (size <= 0) return 0;
-  
+
   /* produce the number string in reverse order to the temp buffer 'rev' */
   do {
     if (flags & FLAG_SMALLS)
@@ -494,38 +494,35 @@ static int scan_int(const char *s, const char **next) {
   return value;
 }
 
-static int vxnprintf(char *buf,
-		     int size,
-		     const char *fmt,
-		     va_list ap,
-		     int flags)
+static int vxnprintf(char *buf, int size, const char *fmt, va_list ap,
+    int flags)
 {
-  int written = 0, w, moremods;
-  int width, prec;
-  char ch, *s;
-  unsigned int uarg;
-  int arg;
+    int written = 0, w, moremods;
+    int width, prec;
+    char ch, *s;
+    unsigned int uarg;
+    int arg;
 
-  if (size <= 0) return 0;
+    if (size <= 0) return 0;
 
-  while (written < size) {
-    ch = *fmt++;
-    if (ch == '\0') break;
+    while (written < size) {
+      ch = *fmt++;
+      if (ch == '\0') break;
 
-    /* normal character => just output it */
-    if (ch != '%') {
-      printc(buf++, ch, flags);
-      written++;
-      continue;
-    }
+      /* normal character => just output it */
+      if (ch != '%') {
+        printc(buf++, ch, flags);
+        written++;
+        continue;
+      }
 
-    /* to get here, ch == '%' */
-    ch = *fmt++;
-    if (ch == '\0') break;
+      /* to get here, ch == '%' */
+      ch = *fmt++;
+      if (ch == '\0') break;
 
-    flags &= FLAG_TTY; /*  preserve only the TTY flag */
-    width = prec = -1;
-    moremods = 1;
+      flags &= FLAG_TTY; /*  preserve only the TTY flag */
+      width = prec = -1;
+      moremods = 1;
 
     /* read flags and modifiers (width+precision): */
     do {
@@ -586,7 +583,7 @@ static int vxnprintf(char *buf,
         printc(buf++, ' ', flags);
         written++;
       }
-      
+
       w = print_uint(buf, size-written, arg, 10, flags, 0, 0);
       buf += w;
       written += w;
@@ -653,7 +650,7 @@ static int vxnprintf(char *buf,
     }
   }
   /* the string was truncated */
-  if (written == size) { 
+  if (written == size) {
     buf--;
     written = -1;
   }
@@ -663,14 +660,14 @@ static int vxnprintf(char *buf,
 }
 
 int printf(const char *fmt, ...) {
-  va_list ap;
-  int written;
+    va_list ap;
+    int written;
 
-  va_start(ap, fmt);
-  written = vxnprintf((char*)0, 0x7fffffff, fmt, ap, FLAG_TTY);
-  va_end(ap);
+    va_start(ap, fmt);
+    written = vxnprintf((char*) 0, 0x7fffffff, fmt, ap, FLAG_TTY);
+    va_end(ap);
 
-  return written;
+    return written;
 }
 
 int snprintf(char *str, int size, const  char  *fmt, ...) {
@@ -709,7 +706,7 @@ void heap_init()
 }
 
 
-/* Return a block of at least size bytes, or NULL if no such block 
+/* Return a block of at least size bytes, or NULL if no such block
    can be found.  */
 void *malloc(size_t size) {
   free_block_t *block;
@@ -731,7 +728,7 @@ void *malloc(size_t size) {
   for (block = free_list, prev_p = &free_list;
        block;
        prev_p = &(block->next), block = block->next) {
-    if ( (int)( block->size - size - sizeof(size_t) ) >= 
+    if ( (int)( block->size - size - sizeof(size_t) ) >=
          (int)( MIN_ALLOC_SIZE+sizeof(size_t) ) ) {
       /* Block is too big, but can be split. */
       block->size -= size+sizeof(size_t);
@@ -763,7 +760,7 @@ void free(void *ptr)
     /* Iterate through the free list, which is sorted by
        increasing address, and insert the newly freed block at the
        proper position. */
-    for (cur_block = free_list, prev_block = NULL; 
+    for (cur_block = free_list, prev_block = NULL;
          ;
          prev_block = cur_block, cur_block = cur_block->next) {
       if (cur_block > block || cur_block == NULL) {
@@ -839,31 +836,39 @@ void *realloc(void *ptr, size_t size)
 
 int atoi(const char *nptr)
 {
-  int i;
-  int retval = 0;
-  int n = strlen(nptr);
-  for (i = 0; i < n; i++) {
-    if (nptr[i] < '0' || nptr[i] > '9') {
-      break;
+    int i;
+    int retval = 0;
+    int n = strlen(nptr);
+
+    for (i = 0; i < n; i++) {
+        if (nptr[i] < '0' || nptr[i] > '9') {
+            break;
+        }
+        retval = retval * 10 + (nptr[i] - '0');
     }
-    retval = retval * 10 + (nptr[i] - '0');
-  }
-  return retval;
+
+    return retval;
 }
 
 usr_sem_t* syscall_sem_open(const char* name, int value)
 {
-    return (usr_sem_t*) _syscall(SYSCALL_SEM_OPEN,(uint32_t) name, (uint32_t) value,0);
+    return (usr_sem_t*) _syscall(SYSCALL_SEM_OPEN, (uint32_t) name,
+        (uint32_t) value, 0);
 }
 
-int syscall_sem_p(usr_sem_t* handle)
+int syscall_sem_p(usr_sem_t *handle)
 {
-    return (int) _syscall(SYSCALL_SEM_PROCURE,(uint32_t) handle,0,0);
+    return (int) _syscall(SYSCALL_SEM_PROCURE, (uint32_t) handle, 0, 0);
 }
 
-int syscall_sem_v(usr_sem_t* handle)
+int syscall_sem_v(usr_sem_t *handle)
 {
-    return (int) _syscall(SYSCALL_SEM_VACATE,(uint32_t) handle,0,0);
+    return (int) _syscall(SYSCALL_SEM_VACATE, (uint32_t) handle, 0, 0);
+}
+
+int syscall_sem_destroy(usr_sem_t *handle)
+{
+    return (int) _syscall(SYSCALL_SEM_DESTROY, (uint32_t) handle, 0, 0);
 }
 
 #endif
