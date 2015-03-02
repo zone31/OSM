@@ -141,7 +141,6 @@ void semaphore_destroy(semaphore_t *sem)
 
 void semaphore_P(semaphore_t *sem)
 {
-    kprintf("Semaphore taken %d on tid: %d\n",sem->value,sem->creator);
     interrupt_status_t intr_status;
 
     intr_status = _interrupt_disable();
@@ -160,20 +159,19 @@ void semaphore_P(semaphore_t *sem)
 
 /**
  * Increases the value of the semaphore sem by one. Wakes up
- * one waiter, if needed. 
- * 
+ * one waiter, if needed.
+ *
  * Note that this function is safe to call both from interrupt handlers
  * and threads, because the call will not block.
  *
  * @param sem Semaphore to raise by one.
  *
- */ 
+ */
 
 void semaphore_V(semaphore_t *sem)
 {
-    kprintf("Semaphore released %d on tid: %d\n",sem->value,sem->creator);
     interrupt_status_t intr_status;
-    
+
     intr_status = _interrupt_disable();
     spinlock_acquire(&sem->slock);
 
