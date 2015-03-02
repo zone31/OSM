@@ -30,9 +30,8 @@ usr_sem_t * syscall_sem_open(char const *name, int value)
     if (value >= 0) {
 
         /* Create semaphore with value.  If already exist return NULL. */
-        if ((new_sem = get_semaphore(name)) != NULL){
+        if ((new_sem = alloc_semaphore(name)) != NULL){
             new_sem->kernel_semaphore = semaphore_create(value);
-            new_sem->status = SEM_ALLOCED;
             new_sem->name = name;
             return new_sem;
         }
