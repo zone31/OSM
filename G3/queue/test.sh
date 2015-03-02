@@ -1,11 +1,11 @@
-gcc test.c our_queue.c -pthread
+make clean
+make
 set -e
-for i in {1..100}
+for i in {1..1000}
 do
-   ./a.out
+   ./queue_test
     if [ $? -eq 139 ]; then
         echo "Segfault Oh no!!"
         exit 1
     fi
-
 done

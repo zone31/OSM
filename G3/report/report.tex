@@ -27,10 +27,11 @@ enumerate, listings, enumitem}
     language=C,
     showstringspaces=false,
     keywordstyle=\bfseries\color{green!40!black},
-    morekeywords={size_t,node,heap},
-    commentstyle=\itshape\color{purple!40!black},
+    morekeywords={size_t,node,heap,pthread_mutex_t,node_t,queue_t,queue,semaphore_t,semstatus,spinlock_t,
+    usr_sem_t_wrapper,usr_sem_t,uint32_t},
+    commentstyle=\itshape\color{black},
     identifierstyle=\color{blue},
-    stringstyle=\color{orange},
+    stringstyle=\color{purple},
 }
 
 \lstset{
@@ -123,8 +124,8 @@ typedef struct queue {
 } queue_t;
 \end{lstlisting}
 \textit{Description} \\
-The queue type contains a pointer to the head and tail of the node\_t linked list. Furthermore, it also
-contains two pthread\_mutex\_t locks. These are used to lock the queue when adding or removing elements
+The queue type contains a pointer to the head and tail of the \texttt{node\_t} linked list. Furthermore, it also
+contains two \texttt{pthread\_mutex\_t} locks. These are used to lock the queue when adding or removing elements
 from the linked list. The reason double pointers are used, instead of only the last element of the linked list, is because the function for returning the first element would have to traverse the full linked list.
 When using 2 pointers, we do not need to traverse the list, and we don't need both top and bottom element to return the top.
 
@@ -151,12 +152,15 @@ Adds an item to the linked list. Sets the tail pointer to this element, and sets
 void queue_init(queue_t *q);
 \end{lstlisting}
 \textit{Description} \\
-Creates an empty queue element, with one node element inside. This is done so that getting an element from an empty queue can be handled easier. This way ,we know that a top node must have an next element. if not (NULL) we can return null instead of the init element.
+Creates an empty queue element, with one node element inside. This is done so that getting an element from an empty queue can be handled easier. This way ,we know that a top node must have an next element. if not (\texttt{NULL}) we can return null instead of the init element.
 
 \subsection{Thread locks}
 The put and get functions use a mutex thread lock. This is done so multiple threads can't have access to the same element in the linked list.
 \subsection{The test}
-The test First generates a thousand threads. These threads will put and get the elements instant
+The test First generates a thousand threads. These threads will put and get the elements instant. This
+is to test what rapid add and remove does to the data structure.
+Next it will start two thousand threads, the first ones adding, and the last ones removing. This test is for making the insertion and removal of elements a bit more random.\\
+If this still not hits an add or remove simultaneously, there are a bash file (\texttt{test.sh}) that runs the program a thousand times. If any segfaults is hitted, it will stop executing.  
 
 \section{Userland semaphores for Buenos}
     Our implementation of semaphores in the buenos operating system is mainly
@@ -226,11 +230,11 @@ void sem_user_init(void);
     \end{lstlisting}
 
     where the functions \texttt{syscall\_sem\_open}, \texttt{syscall\_sem\_p},
-    \texttt{syscall\_sem\_v} and \texttt{syscall\_sem\_destroy} is available for
+    \texttt{syscall\_sem\_v} and \\ \texttt{syscall\_sem\_destroy} is available for
     users to call and \texttt{sem\_user\_init} only can be reached by the
     kernel.  We have implemented the system calls in the file
     \texttt{tests/lib.c} with system call numbers located in
-    \texttt{proc/syscall.h}.  The implementation of \texttt{syscall\_sem\_open}
+    \texttt{proc/syscall.h}. \\ The implementation of \texttt{syscall\_sem\_open}
     in the \texttt{tests/lib.c} is shown here, the rest of the syscalls is very
     similar. \\
 
@@ -303,101 +307,103 @@ void sem_user_init(void)
     \end{lstlisting}
 
 \subsection{syscall\_sem\_p}
-To \emph{procure} (reserve) a resource, we implemented the \emph{syscall\_sem\_p(handle)} system call. It takes a semaphore handle as argument, that was previously returned by the \emph{syscall\_sem\_open(name, value)} call. The handle is used only internally by the userland semaphores. The kernel semaphore is hidden inside the \emph{struct usr\_sem\_t\_wrapper}.
+To \emph{procure} (reserve) a resource, we implemented the \emph{syscall\_sem\_p(handle)} system call. It takes a semaphore handle as argument, that was previously returned by \\ the \emph{syscall\_sem\_open(name, value)} call. The handle is used only internally by the userland semaphores. The kernel semaphore is hidden inside the \emph{struct usr\_sem\_t\_wrapper}.
 
 After checking the argument for runtime errors, the kernel semaphore is retrieved, and the procure function from the kernel is called.
 
-% int syscall_sem_p(usr_sem_t* handle)
-% {
-%     int index;
-%     usr_sem_t_wrapper *handle_wrapper;
+\begin{lstlisting}[style=customc]
+int syscall_sem_p(usr_sem_t* handle)
+{
+    int index;
+    usr_sem_t_wrapper *handle_wrapper;
 
-%     /* Return error if handle is NULL. */
-%     KERNEL_ASSERT(handle != NULL);
+    /* Return error if handle is NULL. */
+    KERNEL_ASSERT(handle != NULL);
 
-%     /* Get the index in the array. */
-%     index = *((int *) handle);
+    /* Get the index in the array. */
+    index = *((int *) handle);
 
-%     /* Get the actual handle and procure a resource. */
-%     handle_wrapper = &(semaphores[index]);
+    /* Get the actual handle and procure a resource. */
+    handle_wrapper = &(semaphores[index]);
 
-%     if (handle_wrapper->status == SEM_NONALLOCED) {
-%         return SEM_DOES_NOT_EXIST;
-%     }
+    if (handle_wrapper->status == SEM_NONALLOCED) {
+        return SEM_DOES_NOT_EXIST;
+    }
 
-%     semaphore_P(handle_wrapper->kernel_semaphore);
+    semaphore_P(handle_wrapper->kernel_semaphore);
 
-%     return 0;
-% }
+    return 0;
+}
+\end{lstlisting}
 
 \subsection{syscall\_sem\_v}
 To vacate (release) a resource, we implemented the \emph{syscall\_sem\_v} system call in nearly the same way as \emph{syscall\_sem\_p}. The function takes a handle as argument and retrieves the kernel semaphore. The kernel function \emph{semaphore\_V} is called with the retrieved kernel semaphore as argument.
+\begin{lstlisting}[style=customc]
+int syscall_sem_v(usr_sem_t* handle)
+{
+    int index;
+    usr_sem_t_wrapper *handle_wrapper;
 
-% int syscall_sem_v(usr_sem_t* handle)
-% {
-%     int index;
-%     usr_sem_t_wrapper *handle_wrapper;
+    /* Return error if handle is NULL. */
+    KERNEL_ASSERT(handle != NULL);
 
-%     /* Return error if handle is NULL. */
-%     KERNEL_ASSERT(handle != NULL);
+    /* Get the index in the array. */
+    index = *((int *) handle);
 
-%     /* Get the index in the array. */
-%     index = *((int *) handle);
+    /* Get the actual handle and vacate the resource. */
+    handle_wrapper = &(semaphores[index]);
 
-%     /* Get the actual handle and vacate the resource. */
-%     handle_wrapper = &(semaphores[index]);
+    if (handle_wrapper->status == SEM_NONALLOCED) {
+        return SEM_DOES_NOT_EXIST;
+    }
 
-%     if (handle_wrapper->status == SEM_NONALLOCED) {
-%         return SEM_DOES_NOT_EXIST;
-%     }
+    semaphore_V(handle_wrapper->kernel_semaphore);
 
-%     semaphore_V(handle_wrapper->kernel_semaphore);
-
-%     return 0;
-% }
-
+    return 0;
+}
+\end{lstlisting}
 \subsection{syscall\_sem\_destroy}
-When a semaphore is no longer needed. It can safely be discarded with the \emph{syscall\_sem\_destroy(handle)} call. The function will prevent simple runtime errors and afterwards check if the semaphore is still in use ie. a function is waiting for a vacate call. To ensure, that the function is not interrupted, all interrupts are disabled, and the function acquires the handle's spinlock. If nothing is using the semaphore, the semaphore is set to \emph{SEM\_NONALLOCED} and is now able to get reallocated in a \emph{syscall\_sem\_open} call.
+When a semaphore is no longer needed, it can safely be discarded with the \\ \emph{syscall\_sem\_destroy(handle)} call. The function will prevent simple runtime errors and afterwards check if the semaphore is still in use ie. a function is waiting for a vacate call. To ensure, that the function is not interrupted, all interrupts are disabled, and the function acquires the handle's spinlock. If nothing is using the semaphore, the semaphore is set to \emph{SEM\_NONALLOCED} and is now able to get reallocated in a \emph{syscall\_sem\_open} call.
+\begin{lstlisting}[style=customc]
+/* Removes a semaphore with a given handle, the handle is dereferenced to be an
+ * integer corresponding to an index in the array of semaphores.  This index is
+ * used to find a semaphore and remove it. */
+int syscall_sem_destroy(usr_sem_t* handle)
+{
+    interrupt_status_t intr_status;
 
-% /* Removes a semaphore with a given handle, the handle is dereferenced to be an
-%  * integer corresponding to an index in the array of semaphores.  This index is
-%  * used to find a semaphore and remove it. */
-% int syscall_sem_destroy(usr_sem_t* handle)
-% {
-%     interrupt_status_t intr_status;
+    usr_sem_t_wrapper *handle_wrapper = &semaphores[*((int *)handle)];
 
-%     usr_sem_t_wrapper *handle_wrapper = &semaphores[*((int *)handle)];
+    /* Semaphore doesn't exist. */
+    if (handle_wrapper->status == SEM_NONALLOCED) {
+        return SEM_DOES_NOT_EXIST;
+    }
 
-%     /* Semaphore doesn't exist. */
-%     if (handle_wrapper->status == SEM_NONALLOCED) {
-%         return SEM_DOES_NOT_EXIST;
-%     }
+    /* Lock when testing if the semaphore is ready to be removed. */
+    intr_status = _interrupt_disable();
+    spinlock_acquire(&handle_wrapper->slock);
 
-%     /* Lock when testing if the semaphore is ready to be removed. */
-%     intr_status = _interrupt_disable();
-%     spinlock_acquire(&handle_wrapper->slock);
+    /* Test if the semaphore is done being used. */
+    if (handle_wrapper->initial_value !=
+        handle_wrapper->kernel_semaphore->value) {
 
-%     /* Test if the semaphore is done being used. */
-%     if (handle_wrapper->initial_value !=
-%         handle_wrapper->kernel_semaphore->value) {
+        /* Release the lock. */
+        spinlock_release(&handle_wrapper->slock);
+        _interrupt_set_state(intr_status);
 
-%         /* Release the lock. */
-%         spinlock_release(&handle_wrapper->slock);
-%         _interrupt_set_state(intr_status);
+        return SEM_IN_USE;
+    }
 
-%         return SEM_IN_USE;
-%     }
+    handle_wrapper->status = SEM_NONALLOCED;
 
-%     handle_wrapper->status = SEM_NONALLOCED;
+    /* Destroy kernel semaphore. */
+    semaphore_destroy(handle_wrapper->kernel_semaphore);
 
-%     /* Destroy kernel semaphore. */
-%     semaphore_destroy(handle_wrapper->kernel_semaphore);
+    /* Release the lock. */
+    spinlock_release(&handle_wrapper->slock);
+    _interrupt_set_state(intr_status);
 
-%     /* Release the lock. */
-%     spinlock_release(&handle_wrapper->slock);
-%     _interrupt_set_state(intr_status);
-
-%     return SUCCESS;
-% }
-
+    return SUCCESS;
+}
+\end{lstlisting}
 \end{document}
