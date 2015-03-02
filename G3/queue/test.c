@@ -25,7 +25,7 @@ void* get(void* n)
 int main(int argc, char const *argv[])
 {
     int i = 0;
-    const int n = 10;
+    const int n = 1000;
     void *ret;
     int_struct node;
     int_struct node_arr[n];

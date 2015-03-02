@@ -98,7 +98,7 @@ numbers=none}
 
 
 
-\subsection*{Function Description and Assumptions}
+\subsection{Function Descriptions}
 
 
 \begin{lstlisting}[style=customc]
@@ -135,22 +135,29 @@ When using 2 pointers, we do not need to traverse the list, and we don't need bo
 void *queue_get(queue_t *q);
 \end{lstlisting}
 \textit{Description} \\
-Returns the first element of the queue.  
+Returns the first element of the queue, then sets the queue head element to the next in the list.
+Also frees the memory.
 
 
 
 \begin{lstlisting}[style=customc]
 void queue_put(queue_t *q, void *item);
 \end{lstlisting}
+\textit{Description} \\
+Adds an item to the linked list. Sets the tail pointer to this element, and sets the last node in the linked list to point at the new element as its next.
 
 
 
 \begin{lstlisting}[style=customc]
 void queue_init(queue_t *q);
 \end{lstlisting}
+\textit{Description} \\
+Creates an empty queue element, with one node element inside. This is done so that getting an element from an empty queue can be handled easier. This way ,we know that a top node must have an next element. if not (NULL) we can return null instead of the init element.
 
-
-
+\subsection{Thread locks}
+The put and get functions use a mutex thread lock. This is done so multiple threads can't have access to the same element in the linked list.
+\subsection{The test}
+The test First generates a thousand threads. These threads will put and get the elements instant 
 
 \section{Userland semaphores for Buenos}
 \subsection{syscall\_sem\_p}
