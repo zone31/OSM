@@ -95,9 +95,66 @@ numbers=none}
 \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
 \section{A thread-safe unbounded queue}
+
+
+
+\subsection*{Function Description and Assumptions}
+
+
+\begin{lstlisting}[style=customc]
+typedef struct node {
+    void *item;
+    struct node *next;
+} node_t;
+\end{lstlisting}
+\textit{Description} \\
+This type includes a void pointer to an item and an pointer to the next element.
+ This creates an linked list, where every typedef refers to its next element.
+ this structure is only for a linked list, not for a queue.
+
+
+
+\begin{lstlisting}[style=customc]
+typedef struct queue {
+    pthread_mutex_t queue_put_lock;
+    pthread_mutex_t queue_get_lock;
+    node_t *head;
+    node_t *tail;
+} queue_t;
+\end{lstlisting}
+\textit{Description} \\
+The queue type contains a pointer to the head and tail of the node\_t linked list. Furthermore, it also 
+contains two pthread\_mutex\_t locks. These are used to lock the queue when adding or removing elements
+from the linked list. The reason double pointers are used, instead of only the last element of the linked list, is because the function for returning the first element would have to traverse the full linked list.
+When using 2 pointers, we do not need to traverse the list, and we don't need both top and bottom element to return the top. 
+
+
+
+
+\begin{lstlisting}[style=customc]
+void *queue_get(queue_t *q);
+\end{lstlisting}
+\textit{Description} \\
+Returns the first element of the queue.  
+
+
+
+\begin{lstlisting}[style=customc]
+void queue_put(queue_t *q, void *item);
+\end{lstlisting}
+
+
+
+\begin{lstlisting}[style=customc]
+void queue_init(queue_t *q);
+\end{lstlisting}
+
+
+
+
 \section{Userland semaphores for Buenos}
-\subsection{syscall_sem_p}
-To \emph{procure} (reserve) a resource, we implemented the \emph{syscall_sem_p(handle)} system call. It takes a semaphore handle as argument, that was previously returned by the \emph{syscall_sem_open(name, value)} call. The handle is used only internally by the userland semaphores. The kernel semaphore is hidden inside the \emph{struct usr_sem_t_wrapper}.
+\subsection{syscall\_sem\_p}
+To \emph{procure} (reserve) a resource, we implemented the \emph{syscall\_sem\_p(handle)} system call. It takes a semaphore handle as argument, that was previously returned by the \emph{syscall\_sem\_open(name, value)} call. The handle is used only internally by the userland semaphores. The kernel semaphore is hidden inside the \emph{struct usr\_sem\_t\_wrapper}.
 
 After checking the argument for runtime errors, the kernel semaphore is retrieved, and the procure function from the kernel is called.
 
@@ -124,8 +181,8 @@ After checking the argument for runtime errors, the kernel semaphore is retrieve
 %     return 0;
 % }
 
-\subsection{syscall_sem_v}
-To vacate (release) a resource, we implemented the \emph{syscall_sem_v} system call in nearly the same way as \emph{syscall_sem_p}. The function takes a handle as argument and retrieves the kernel semaphore. The kernel function \emph{semaphore_V} is called with the retrieved kernel semaphore as argument.
+\subsection{syscall\_sem\_v}
+To vacate (release) a resource, we implemented the \emph{syscall\_sem\_v} system call in nearly the same way as \emph{syscall\_sem\_p}. The function takes a handle as argument and retrieves the kernel semaphore. The kernel function \emph{semaphore\_V} is called with the retrieved kernel semaphore as argument.
 
 % int syscall_sem_v(usr_sem_t* handle)
 % {
@@ -150,8 +207,8 @@ To vacate (release) a resource, we implemented the \emph{syscall_sem_v} system c
 %     return 0;
 % }
 
-\subsection{syscall_sem_destroy}
-When a semaphore is no longer needed. It can safely be discarded with the \emph{syscall_sem_destroy(handle)} call. The function will prevent simple runtime errors and afterwards check if the semaphore is still in use ie. a function is waiting for a vacate call. To ensure, that the function is not interrupted, all interrupts are disabled, and the function acquires the handle's spinlock. If nothing is using the semaphore, the semaphore is set to \emph{SEM_NONALLOCED} and is now able to get reallocated in a \emph{syscall_sem_open} call.
+\subsection{syscall\_sem\_destroy}
+When a semaphore is no longer needed. It can safely be discarded with the \emph{syscall\_sem\_destroy(handle)} call. The function will prevent simple runtime errors and afterwards check if the semaphore is still in use ie. a function is waiting for a vacate call. To ensure, that the function is not interrupted, all interrupts are disabled, and the function acquires the handle's spinlock. If nothing is using the semaphore, the semaphore is set to \emph{SEM\_NONALLOCED} and is now able to get reallocated in a \emph{syscall\_sem\_open} call.
 
 % /* Removes a semaphore with a given handle, the handle is dereferenced to be an
 %  * integer corresponding to an index in the array of semaphores.  This index is
