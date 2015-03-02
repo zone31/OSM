@@ -56,6 +56,7 @@
 #include "net/network.h"
 #include "proc/process.h"
 #include "vm/vm.h"
+#include "proc/semaphore.h"
 
 /**
  * Fallback function for system startup. This function is executed
@@ -208,8 +209,11 @@ void init(void)
     kwrite("Initializing sleep queue\n");
     sleepq_init();
 
-    kwrite("Initializing semaphores\n");
+    kwrite("Initializing kernel semaphores\n");
     semaphore_init();
+
+    kwrite("Initializing user semaphores\n");
+    sem_user_init();
 
     kwrite("Initializing device drivers\n");
     device_init();

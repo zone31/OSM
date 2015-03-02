@@ -119,7 +119,7 @@ int stringcmp(const char *str1, const char *str2)
     }
 
     /* Dummy return to keep gcc happy */
-    return 0; 
+    return 0;
 }
 
 /**

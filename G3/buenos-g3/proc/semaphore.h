@@ -15,6 +15,7 @@ typedef struct {
     semaphore_t *kernel_semaphore;
     semstatus status;
     const char *name;
+    int self;
 } usr_sem_t_wrapper;
 
 typedef void usr_sem_t;
@@ -29,5 +30,6 @@ int syscall_sem_v(usr_sem_t *handle);
 int syscall_sem_destroy(usr_sem_t *handle);
 void sem_user_init(void);
 usr_sem_t * get_semaphore(char const *name);
+usr_sem_t *alloc_semaphore(char const *name);
 
 #endif
