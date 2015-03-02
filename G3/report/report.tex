@@ -4,20 +4,20 @@
 \usepackage{graphicx} % \includegraphics
 \usepackage{fancyhdr, amsmath, amssymb, comment, caption, placeins, subfigure,
     fixltx2e, changepage, listings, courier, soul, hyperref, geometry,
-    enumerate, listings, enumitem}
+enumerate, listings, enumitem}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 
 
 \author{\Large{Magnus N\o rskov Stavngaard} \\
-		\texttt{magnus@stavngaard.dk}
-		\\\\
-		\Large{Mark Jan Jacobi} \\
-        \texttt{mark@jacobi.pm}
-		 \\\\
-		\Large{Mads Ynddal} \\
-		\texttt{mynddal@me.com}
+    \texttt{magnus@stavngaard.dk}
+    \\\\
+    \Large{Mark Jan Jacobi} \\
+    \texttt{mark@jacobi.pm}
+    \\\\
+    \Large{Mads Ynddal} \\
+    \texttt{mynddal@me.com}
 }
 
 \lstdefinestyle{customc} {
@@ -34,8 +34,8 @@
 }
 
 \lstset{
-basicstyle=\footnotesize,
-language=C,
+    basicstyle=\footnotesize,
+    language=C,
 numbers=none}
 \lstset{literate=
     {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
@@ -72,29 +72,126 @@ numbers=none}
 \pagenumbering{gobble}
 
 \begin{document}
-    %% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
-    %% `natbio-farve` to use SCIENCE's new colors and logo.
-    \AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]
-        {include/ku-farve}}}
-    \AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]
-        {include/ku-farve}}}
+%% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+%% `natbio-farve` to use SCIENCE's new colors and logo.
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]
+{include/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]
+{include/ku-farve}}}
 
-    %% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
-    \AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
 
-    \clearpage
-    \maketitle
-    \thispagestyle{empty}
+\clearpage
+\maketitle
+\thispagestyle{empty}
 
-    \newpage
+\newpage
 
-    %\tableofcontents
+%\tableofcontents
 
-    %\newpage
+%\newpage
 
-    \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
+\pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
-    \section{A thread-safe unbounded queue}
-    \section{Userland semaphores for Buenos}
+\section{A thread-safe unbounded queue}
+\section{Userland semaphores for Buenos}
+\subsection{syscall_sem_p}
+To \emph{procure} (reserve) a resource, we implemented the \emph{syscall_sem_p(handle)} system call. It takes a semaphore handle as argument, that was previously returned by the \emph{syscall_sem_open(name, value)} call. The handle is used only internally by the userland semaphores. The kernel semaphore is hidden inside the \emph{struct usr_sem_t_wrapper}.
+
+After checking the argument for runtime errors, the kernel semaphore is retrieved, and the procure function from the kernel is called.
+
+% int syscall_sem_p(usr_sem_t* handle)
+% {
+%     int index;
+%     usr_sem_t_wrapper *handle_wrapper;
+
+%     /* Return error if handle is NULL. */
+%     KERNEL_ASSERT(handle != NULL);
+
+%     /* Get the index in the array. */
+%     index = *((int *) handle);
+
+%     /* Get the actual handle and procure a resource. */
+%     handle_wrapper = &(semaphores[index]);
+
+%     if (handle_wrapper->status == SEM_NONALLOCED) {
+%         return SEM_DOES_NOT_EXIST;
+%     }
+
+%     semaphore_P(handle_wrapper->kernel_semaphore);
+
+%     return 0;
+% }
+
+\subsection{syscall_sem_v}
+To vacate (release) a resource, we implemented the \emph{syscall_sem_v} system call in nearly the same way as \emph{syscall_sem_p}. The function takes a handle as argument and retrieves the kernel semaphore. The kernel function \emph{semaphore_V} is called with the retrieved kernel semaphore as argument.
+
+% int syscall_sem_v(usr_sem_t* handle)
+% {
+%     int index;
+%     usr_sem_t_wrapper *handle_wrapper;
+
+%     /* Return error if handle is NULL. */
+%     KERNEL_ASSERT(handle != NULL);
+
+%     /* Get the index in the array. */
+%     index = *((int *) handle);
+
+%     /* Get the actual handle and vacate the resource. */
+%     handle_wrapper = &(semaphores[index]);
+
+%     if (handle_wrapper->status == SEM_NONALLOCED) {
+%         return SEM_DOES_NOT_EXIST;
+%     }
+
+%     semaphore_V(handle_wrapper->kernel_semaphore);
+
+%     return 0;
+% }
+
+\subsection{syscall_sem_destroy}
+When a semaphore is no longer needed. It can safely be discarded with the \emph{syscall_sem_destroy(handle)} call. The function will prevent simple runtime errors and afterwards check if the semaphore is still in use ie. a function is waiting for a vacate call. To ensure, that the function is not interrupted, all interrupts are disabled, and the function acquires the handle's spinlock. If nothing is using the semaphore, the semaphore is set to \emph{SEM_NONALLOCED} and is now able to get reallocated in a \emph{syscall_sem_open} call.
+
+% /* Removes a semaphore with a given handle, the handle is dereferenced to be an
+%  * integer corresponding to an index in the array of semaphores.  This index is
+%  * used to find a semaphore and remove it. */
+% int syscall_sem_destroy(usr_sem_t* handle)
+% {
+%     interrupt_status_t intr_status;
+
+%     usr_sem_t_wrapper *handle_wrapper = &semaphores[*((int *)handle)];
+
+%     /* Semaphore doesn't exist. */
+%     if (handle_wrapper->status == SEM_NONALLOCED) {
+%         return SEM_DOES_NOT_EXIST;
+%     }
+
+%     /* Lock when testing if the semaphore is ready to be removed. */
+%     intr_status = _interrupt_disable();
+%     spinlock_acquire(&handle_wrapper->slock);
+
+%     /* Test if the semaphore is done being used. */
+%     if (handle_wrapper->initial_value !=
+%         handle_wrapper->kernel_semaphore->value) {
+
+%         /* Release the lock. */
+%         spinlock_release(&handle_wrapper->slock);
+%         _interrupt_set_state(intr_status);
+
+%         return SEM_IN_USE;
+%     }
+
+%     handle_wrapper->status = SEM_NONALLOCED;
+
+%     /* Destroy kernel semaphore. */
+%     semaphore_destroy(handle_wrapper->kernel_semaphore);
+
+%     /* Release the lock. */
+%     spinlock_release(&handle_wrapper->slock);
+%     _interrupt_set_state(intr_status);
+
+%     return SUCCESS;
+% }
 
 \end{document}
