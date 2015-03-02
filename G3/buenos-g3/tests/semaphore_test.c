@@ -2,7 +2,6 @@
 #include "tests/lib.h"
 #include "proc/process.h"
 #include "lib/libc.h"
-// #include "kernel/semaphore.h"
 
 /* Semaphore locks when printing. */
 usr_sem_t *lock_print = NULL;
@@ -25,6 +24,8 @@ int main()
     /* Initialize lock. */
     lock_print = syscall_sem_open(semaphore_name_print, 1);
 
+    printf("the pointer is %p\n", lock_print);
+
     /* Create semaphore to be shared by consumer and producer. */
     safe_print("Creating semaphore with name\n");
     if ((sem = syscall_sem_open(semaphore_name, 0)) == NULL)
@@ -44,7 +45,9 @@ int main()
     producer_return = syscall_join(producer_pid);
 
     /* Close the semaphore. */
-    syscall_sem_destroy(sem);
+    while (syscall_sem_destroy(sem) == SEM_IN_USE) {
+        safe_print("Trying to destroy.\n");
+    }
 
     /* Join with consume. */
     consumer_return = syscall_join(consumer_pid);
@@ -54,14 +57,17 @@ int main()
     else
         safe_print("Semaphore test failed\n");
 
+    safe_print("test finished - halting system \"gracefully\"\n");
+    syscall_halt();
+
     return 0;
 }
 
-void safe_print(const char *print_diz_nigga)
+void safe_print(const char *str)
 {
     syscall_sem_p(lock_print);
 
-    printf(print_diz_nigga);
+    printf(str);
 
     syscall_sem_v(lock_print);
 }

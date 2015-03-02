@@ -4,14 +4,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 void queue_init(queue_t *q)
 {
-  node_t *new = malloc(sizeof(node_t));
-  assert(new != NULL);
+    node_t *new = malloc(sizeof(node_t));
+    assert(new != NULL);
 
-  new->next = NULL;
-  q->head = q->tail = new;
+    new->next = NULL;
+    q->head = q->tail = new;
 }
 
 void queue_put(queue_t *q, void *item)
@@ -24,7 +23,7 @@ void queue_put(queue_t *q, void *item)
   	new->item = item;
   	new->next = NULL;
 
-  	/* add the new node to the tail */
+  	/* Add the new node to the tail */
   	q->tail->next = new;
   	q->tail = new;
 
@@ -32,8 +31,11 @@ void queue_put(queue_t *q, void *item)
 }
 
 void * queue_get(queue_t *q) {
+    void *item;
+    node_t *old;
+
     pthread_mutex_lock(&q->queue_get_lock);
-    node_t *old = q->head;
+    old = q->head;
 
   	/* note that the head contains a 'dummy' node. That's why we test
   	 * old->next. */
@@ -41,7 +43,7 @@ void * queue_get(queue_t *q) {
   		return NULL; /* queue was empty */
   	}
 
-  	void *item = old->next->item;
+  	item = old->next->item;
 
   	/* update the head and free the old memory */
   	q->head = old->next;

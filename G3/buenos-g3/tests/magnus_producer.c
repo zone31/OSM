@@ -12,7 +12,7 @@ int main()
 {
     int i;
     int produced = 0; /* Number of produced resources. */
-    int n = 10000;
+    int n = 100;
     usr_sem_t *sem;
 
     /* Initialize lock. */
@@ -31,15 +31,17 @@ int main()
         produced++;
     }
 
+    safe_print("Done producing\n");
+
     syscall_exit(produced);
     return 0;
 }
 
-void safe_print(const char *print_diz_nigga)
+void safe_print(const char *str)
 {
     syscall_sem_p(lock_print);
 
-    printf(print_diz_nigga);
+    printf(str);
 
     syscall_sem_v(lock_print);
 }
