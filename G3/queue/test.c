@@ -36,19 +36,20 @@ int main(int argc, char const *argv[])
 
     queue_init(&q);
 
-    // for(i; i < n; i++) {
-    //     node_arr[i].a = i;
-    //     pthread_create(&(putNget_thr[i]), NULL, putNget, &node_arr[i]);
-    // }
-    //
-    // printf("NOW JOINING\n");
-    // i = 0;
-    // for(i; i < n; i++) {
-    //     pthread_join(putNget_thr[i],&ret);
-    //     printf("output test %d\n", ((int_struct*) ret)->a);
-    // }
+    printf("Creating treads with function that adds and deletes instant\n");
+    for(i; i < n; i++) {
+        node_arr[i].a = i;
+        pthread_create(&(putNget_thr[i]), NULL, putNget, &node_arr[i]);
+    }
 
-    printf("Now deleting and joining at the same time!\n");
+    printf("Now joining treads, that added and deleted instant\n");
+    i = 0;
+    for(i; i < n; i++) {
+        pthread_join(putNget_thr[i],&ret);
+        printf("Output from thead %d, value %d\n",i ,((int_struct*) ret)->a);
+    }
+
+    printf("Now deleting and joining in different treads\n");
 
     i = 0;
     for(i; i < n; i++) {
@@ -64,9 +65,9 @@ int main(int argc, char const *argv[])
     for(i; i < n; i++) {
         pthread_join(get_thr[i],&ret);
         if(ret == NULL){
-            printf("Was null\n");
+            printf("Output from thead %d, value NULL\n", (i));
         }else{
-            printf("output test %d\n", ((int_struct*) ret)->a);
+            printf("Output from thead %d, value %d\n",i,((int_struct*) ret)->a);
         }
     }
     return 0;
