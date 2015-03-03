@@ -44,7 +44,7 @@
 
 
 /* Halt the system (sync disks and power off). This function will
- * never return. 
+ * never return.
  */
 void syscall_halt(void)
 {
@@ -67,8 +67,8 @@ int syscall_exec(const char *filename)
  */
 int syscall_execp(const char *filename, int argc, const char **argv)
 {
-    return (int)_syscall(SYSCALL_EXEC, (uint32_t)filename, 
-                         (uint32_t) argc, 
+    return (int)_syscall(SYSCALL_EXEC, (uint32_t)filename,
+                         (uint32_t) argc,
                          (uint32_t) argv);
 }
 
@@ -126,7 +126,7 @@ int syscall_open(const char *filename)
 
 
 /* Close the open file identified by 'filehandle'. Zero will be returned
- * success, other values indicate errors. 
+ * success, other values indicate errors.
  */
 int syscall_close(int filehandle)
 {
@@ -147,7 +147,7 @@ int syscall_read(int filehandle, void *buffer, int length)
 
 
 /* Set the file position of the open file identified by 'filehandle'
- * to 'offset'. Returns 0 on success or a negative value on error. 
+ * to 'offset'. Returns 0 on success or a negative value on error.
  */
 int syscall_seek(int filehandle, int offset)
 {
@@ -168,7 +168,7 @@ int syscall_write(int filehandle, const void *buffer, int length)
 
 
 /* Create a file with the name 'filename' and initial size of
- * 'size'. Returns 0 on success and a negative value on error. 
+ * 'size'. Returns 0 on success and a negative value on error.
  */
 int syscall_create(const char *filename, int size)
 {
@@ -177,7 +177,7 @@ int syscall_create(const char *filename, int size)
 
 
 /* Remove the file identified by 'filename' from the file system it
- * resides on. Returns 0 on success or a negative value on error. 
+ * resides on. Returns 0 on success or a negative value on error.
  */
 int syscall_delete(const char *filename)
 {
@@ -310,7 +310,7 @@ void *memcpy(void *dest, const void *src, size_t n) {
 
 /* Write c to standard output.  Returns a positive integer on
    success. */
-int putc(char c)
+int my_putc(char c)
 {
   return syscall_write(stdout, &c, 1);
 }
@@ -373,20 +373,20 @@ ssize_t readline(char *s, size_t size)
     switch (c) {
     case '\r': /* Treat as newline */
     case '\n':
-      putc('\n');
+      my_putc('\n');
       goto stop;
       break;
     case 127:
       if (count > 0) {
-        putc('\010');
-        putc(' ');
-        putc('\010');
+        my_putc('\010');
+        my_putc(' ');
+        my_putc('\010');
         count--;
       }
       break;
     default:
       if (count<size-1) {
-        putc(s[count++]=c);
+        my_putc(s[count++]=c);
       }
     }
   }
@@ -413,7 +413,7 @@ ssize_t readline(char *s, size_t size)
 static void printc(char *buf, char c, int flags) {
   if (flags & FLAG_TTY) {
     /* do not output (terminating) zeros to TTY */
-    if (c != '\0') putc(c);
+    if (c != '\0') my_putc(c);
   } else
     *buf = c;
 }
@@ -438,7 +438,7 @@ static int print_uint(char *buf,
   int i = 0, written = 0;
 
   if (size <= 0) return 0;
-  
+
   /* produce the number string in reverse order to the temp buffer 'rev' */
   do {
     if (flags & FLAG_SMALLS)
@@ -585,7 +585,7 @@ static int vxnprintf(char *buf,
         printc(buf++, ' ', flags);
         written++;
       }
-      
+
       w = print_uint(buf, size-written, arg, 10, flags, 0, 0);
       buf += w;
       written += w;
@@ -652,7 +652,7 @@ static int vxnprintf(char *buf,
     }
   }
   /* the string was truncated */
-  if (written == size) { 
+  if (written == size) {
     buf--;
     written = -1;
   }
@@ -708,7 +708,7 @@ void heap_init()
 }
 
 
-/* Return a block of at least size bytes, or NULL if no such block 
+/* Return a block of at least size bytes, or NULL if no such block
    can be found.  */
 void *malloc(size_t size) {
   free_block_t *block;
@@ -730,7 +730,7 @@ void *malloc(size_t size) {
   for (block = free_list, prev_p = &free_list;
        block;
        prev_p = &(block->next), block = block->next) {
-    if ( (int)( block->size - size - sizeof(size_t) ) >= 
+    if ( (int)( block->size - size - sizeof(size_t) ) >=
          (int)( MIN_ALLOC_SIZE+sizeof(size_t) ) ) {
       /* Block is too big, but can be split. */
       block->size -= size+sizeof(size_t);
@@ -762,7 +762,7 @@ void free(void *ptr)
     /* Iterate through the free list, which is sorted by
        increasing address, and insert the newly freed block at the
        proper position. */
-    for (cur_block = free_list, prev_block = NULL; 
+    for (cur_block = free_list, prev_block = NULL;
          ;
          prev_block = cur_block, cur_block = cur_block->next) {
       if (cur_block > block || cur_block == NULL) {
