@@ -36,7 +36,7 @@
 # $Id: Makefile,v 1.6 2005/05/09 00:05:44 jaatroko Exp $
 
 # Add your _userland_ program sources to this variable:
-SOURCES  := halt.c readwrite.c exec.c exec_child1.c exec_child2.c hw.c
+SOURCES  := halt.c readwrite.c
 
 OBJECTS  := $(patsubst %.c, %.o, $(SOURCES))
 TARGETS  := $(patsubst %.o, %, $(OBJECTS))
@@ -49,9 +49,11 @@ SYSLIBS := crt.o _syscall.o lib.o
 CC      := mips-elf-gcc
 AS      := mips-elf-as
 LD      := mips-elf-ld
-CFLAGS  += -G0 -I.. -Wall -W -Werror -fno-builtin-putc
+CFLAGS  += -G0 -I.. -Wall -W -Werror
 LDFLAGS := --script=ld.userland.script --cref -s -G0
 ASFLAGS := -I.. -Wa,-mips32
+
+
 
 # -G0 is needed to avoid GP optimization (LD won't link if it is used)
 
@@ -59,9 +61,15 @@ ASFLAGS := -I.. -Wa,-mips32
 # complex linking (e.g., your source code is divided to multiple
 # files))
 all: $(TARGETS)
+	../util/tfstool create ../fyams.harddisk 2048 disk
+	$(foreach var,$(TARGETS),../util/tfstool write ../fyams.harddisk $(var) $(var);)
+	../util/tfstool list ../fyams.harddisk
+
+
 
 $(TARGETS): %: $(SYSLIBS) %.o
 	$(LD) -o $@ $(LDFLAGS) -Map $@.map $^
+
 
 %.o: %.S
 	$(CC) -o $@ $(ASFLAGS) -c $<
@@ -70,7 +78,9 @@ $(TARGETS): %: $(SYSLIBS) %.o
 %.o: %.c
 	$(CC) -o $@  $(CFLAGS) -c $<
 
+
 clean:
 	rm -f $(SYSLIBS) $(OBJECTS) *.map $(TARGETS) *~
+	rm -f ../fyams.harddisk
 
 .PHONY: clean
