@@ -4,20 +4,20 @@
 \usepackage{graphicx} % \includegraphics
 \usepackage{fancyhdr, amsmath, amssymb, comment, caption, placeins, subfigure,
     fixltx2e, changepage, listings, courier, soul, hyperref, geometry,
-    enumerate, listings, enumitem}
+enumerate, listings, enumitem}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 
 
 \author{\Large{Magnus N\o rskov Stavngaard} \\
-		\texttt{magnus@stavngaard.dk}
-		\\\\
-		\Large{Mark Jan Jacobi} \\
-        \texttt{mark@jacobi.pm}
-		 \\\\
-		\Large{Mads Ynddal} \\
-		\texttt{mynddal@me.com}
+    \texttt{magnus@stavngaard.dk}
+    \\\\
+    \Large{Mark Jan Jacobi} \\
+    \texttt{mark@jacobi.pm}
+    \\\\
+    \Large{Mads Ynddal} \\
+    \texttt{mynddal@me.com}
 }
 
 \lstdefinestyle{customc} {
@@ -27,15 +27,16 @@
     language=C,
     showstringspaces=false,
     keywordstyle=\bfseries\color{green!40!black},
-    morekeywords={size_t,node,heap},
-    commentstyle=\itshape\color{purple!40!black},
+    morekeywords={size_t,node,heap,pthread_mutex_t,node_t,queue_t,queue,semaphore_t,semstatus,spinlock_t,
+    usr_sem_t_wrapper,usr_sem_t,uint32_t},
+    commentstyle=\itshape\color{black},
     identifierstyle=\color{blue},
-    stringstyle=\color{orange},
+    stringstyle=\color{purple},
 }
 
 \lstset{
-basicstyle=\footnotesize,
-language=C,
+    basicstyle=\footnotesize,
+    language=C,
 numbers=none}
 \lstset{literate=
     {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
@@ -54,7 +55,7 @@ numbers=none}
 \title{
     \vspace{3cm}
     \Huge{OSM} \\
-    \Large{G4}
+    \Large{G3}
 }
 
 \pagestyle{fancy}
@@ -72,29 +73,38 @@ numbers=none}
 \pagenumbering{gobble}
 
 \begin{document}
-    %% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
-    %% `natbio-farve` to use SCIENCE's new colors and logo.
-    \AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]
-        {include/ku-farve}}}
-    \AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]
-        {include/ku-farve}}}
+%% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+%% `natbio-farve` to use SCIENCE's new colors and logo.
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]
+{include/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]
+{include/ku-farve}}}
 
-    %% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
-    \AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
 
-    \clearpage
-    \maketitle
-    \thispagestyle{empty}
+\clearpage
+\maketitle
+\thispagestyle{empty}
 
-    \newpage
+\newpage
 
-    %\tableofcontents
+%\tableofcontents
 
-    %\newpage
+%\newpage
 
-    \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
+\pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
-    \section{template}
-template
-    
+\section*{Task 1}
+On the MIPS architecture, the TLB is handled in software. This means that the CPU calls interrupts, when a virtual memory address is tried to be accessed, while it is not in memory. When the interrupts are called, it is up to the operating system to handle and solve them.
+Our implementation has some issues, but the idea is as follows: 
+1. Iterate through the page table, to find the Virtual Page Number (VPN) the instruction used.
+2. Check if the valid bit is set for the found page, if so, continue, otherwise goto 5.
+3. ???
+4a. Overwrite a random page to solve the TLB interrupt
+4b. ???
+5. Check if it is a kernel process. If so, do a kernel panic. If not, terminate the process.
+
+\section*{Task 2}
+
 \end{document}
