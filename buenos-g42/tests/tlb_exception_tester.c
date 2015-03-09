@@ -3,9 +3,7 @@
 int main(void)
 {
     /* heap_init(); */
-
-    printf("---------------------------------------------------------------------------alloc\n\n\n");
-    int foo[960];
+    int foo[8000];
     unsigned int i;
 
     for (i = 0; i < sizeof(foo)/sizeof(int); i++) {

@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# Script skrevet en af anden gruppe
-
+rm -f fyams.harddisk &&
 make clean &&
 make &&
 cd tests &&
 make clean &&
 make &&
+../util/tfstool create ../fyams.harddisk 2048 disk &&
+../util/tfstool write ../fyams.harddisk tlb_exception_tester tlb_exception_tester &&
+../util/tfstool list ../fyams.harddisk &&
 cd .. &&
 fyams-sim buenos initprog=[disk]$1 &&
 make clean &&
