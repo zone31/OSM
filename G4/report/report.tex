@@ -114,7 +114,7 @@ Our implementation fails, because it looks for an address that is off by a few b
 
     In task two we were asked to create a function to help the implementation of
     malloc to allocate space on the heap.  The function to implement is called
-    \texttt{syscall_memlimit} and has the prototype,
+    \texttt{syscall\_memlimit} and has the prototype,
 
     \begin{lstlisting}[style=customc]
 void * syscall_memlimit(void *new_end);
@@ -122,7 +122,7 @@ void * syscall_memlimit(void *new_end);
 
     The function should allocate more space for userland processes when they
     need it.  The function should try to move a heap pointer to the new point
-    \texttt{heap_end}, if this is possible the function should return a pointer
+    \texttt{heap\_end}, if this is possible the function should return a pointer
     to the new space allocated, if not the function should return \texttt{NULL}.
     If the function is given NULL as a parameter it should return the current
     end of the heap.  Normally a user process can both allocate and free memory
@@ -133,7 +133,7 @@ void * syscall_memlimit(void *new_end);
 
     The userland library \texttt{tests/lib.c} already contains an implementation
     of \texttt{malloc}, although this \texttt{malloc} implementation can only
-    allocate 256 bytes.  If we had implemented \texttt{syscall_memlimit} we
+    allocate 256 bytes.  If we had implemented \texttt{syscall\_memlimit} we
     could use this function in malloc when malloc runs out of memory to obtain
     more space from the system that can be used by the user.
 
