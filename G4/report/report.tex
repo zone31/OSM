@@ -108,5 +108,33 @@ Our implementation has some issues, but the idea is as follows:
 Our implementation fails, because it looks for an address that is off by a few bytes. A small test showed, that the difference between the correct address and address asked for is: (size of allocation)/2048 rounded up to nearest integer. A guess to why this error occurs, is because the VPN is exactly 2048 bytes and it might be allocated twice by mistake.
 
 \section*{Task 2}
+    We haven't made a working task 2, we used all the time we had trying to get
+    task 1 to work so their wasn't any time for task 2.  We will here try to
+    explain what task two should have done had it been implemented. \\
+
+    In task two we were asked to create a function to help the implementation of
+    malloc to allocate space on the heap.  The function to implement is called
+    \texttt{syscall_memlimit} and has the prototype,
+
+    \begin{lstlisting}[style=customc]
+void * syscall_memlimit(void *new_end);
+    \end{lstlisting}
+
+    The function should allocate more space for userland processes when they
+    need it.  The function should try to move a heap pointer to the new point
+    \texttt{heap_end}, if this is possible the function should return a pointer
+    to the new space allocated, if not the function should return \texttt{NULL}.
+    If the function is given NULL as a parameter it should return the current
+    end of the heap.  Normally a user process can both allocate and free memory
+    from the heap, in Buenos freeing space on the heap is not implemented and
+    therefore the heap can always only grow and never shrink.  This means that
+    if a user attempts to decrease the heapsize the function should return an
+    error, either a \texttt{NULL} pointer or a \texttt{KERNEL PANIC}.  \\
+
+    The userland library \texttt{tests/lib.c} already contains an implementation
+    of \texttt{malloc}, although this \texttt{malloc} implementation can only
+    allocate 256 bytes.  If we had implemented \texttt{syscall_memlimit} we
+    could use this function in malloc when malloc runs out of memory to obtain
+    more space from the system that can be used by the user.
 
 \end{document}
