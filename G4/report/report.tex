@@ -98,12 +98,14 @@ numbers=none}
 \section*{Task 1}
 On the MIPS architecture, the TLB is handled in software. This means that the CPU calls interrupts, when a virtual memory address is tried to be accessed, while it is not in memory. When the interrupts are called, it is up to the operating system to handle and solve them.
 Our implementation has some issues, but the idea is as follows: 
-1. Iterate through the page table, to find the Virtual Page Number (VPN) the instruction used.
-2. Check if the valid bit is set for the found page, if so, continue, otherwise goto 5.
-3. ???
-4a. Overwrite a random page to solve the TLB interrupt
-4b. ???
-5. Check if it is a kernel process. If so, do a kernel panic. If not, terminate the process.
+\begin{enumerate}
+    \item Iterate through the page table, to find the Virtual Page Number (VPN) the instruction used.
+    \item Check if the valid bit is set for the found page, if so, continue, otherwise go to 6.
+    \item ???
+    \item Overwrite a random page to solve the TLB interrupt
+    \item ???
+    \item Check if it is a kernel process. If so, do a kernel panic. If not, terminate the process.
+\end{enumerate}
 
 Our implementation fails, because it looks for an address that is off by a few bytes. A small test showed, that the difference between the correct address and address asked for is: (size of allocation)/2048 rounded up to nearest integer. A guess to why this error occurs, is because the VPN is exactly 2048 bytes and it might be allocated twice by mistake.
 
