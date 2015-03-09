@@ -39,6 +39,7 @@
 #include "vm/tlb.h"
 #include "vm/pagetable.h"
 #include "kernel/thread.h"
+#include "vm/vm.h"
 
 void tlb_modified_exception(void)
 {
@@ -56,7 +57,7 @@ void tlb_modified_exception(void)
     KERNEL_PANIC("Kernel tlb modified exception");
 }
 
-void tlb_load_exception(void)
+void load_store(void)
 {
     int i;
     tlb_exception_state_t state;
@@ -69,15 +70,26 @@ void tlb_load_exception(void)
     _tlb_get_exception_state(&state);
     thread = thread_get_current_thread_entry();
 
-    odd = ODD_VPN(state.badvpn2);
+    // odd = ODD_VPN(state.badvaddr);
+    odd = state.badvaddr & 4096;
 
     /* Loop through the pagetable and find a tlb_entry with the same vpn2. */
     for (i = 0; i < PAGETABLE_ENTRIES; i++) {
+        kprintf("looking %d\n", i);
         entry = &thread->pagetable->entries[i];
 
         valid = odd ? entry->V1 : entry->V0;
 
+        kprintf("valid %d\n", valid);
+
+        kprintf("comparing VPN2 %d == badvpn2 %d\n", entry->VPN2, state.badvpn2);
+        if (state.badvpn2)
+            kprintf("not 0 statebadvpn2\n");
+        if (entry->VPN2)
+            kprintf("not 0 entry\n");
+
         if (entry->VPN2 == state.badvpn2 && valid) {
+            kprintf("running the if\n");
             entry->ASID = state.asid;
 
             /* tlb_table_index is negative if there is no space in the tlb. */
@@ -89,6 +101,8 @@ void tlb_load_exception(void)
                 /* Write one pagetable. */
                 _tlb_write(entry, tlb_table_index, 1);
             }
+
+            return;
         }
     }
 
@@ -96,56 +110,123 @@ void tlb_load_exception(void)
      * generating the exception. */
     if (thread->user_context->status & USERLAND_ENABLE_BIT) {
         kwrite("Access violation\n");
+
+        /* Remove the pagetable. */
+        vm_destroy_pagetable(thread->pagetable);
+        thread->pagetable = NULL;
+
+        /* Close the thread. */
         thread_finish();
     } else {
-        KERNEL_PANIC("Unhandled TLB load exception");
+        KERNEL_PANIC("Unhandled TLB load or store exception");
     }
+}
+
+void tlb_load_exception(void)
+{
+    load_store();
+    // int i;
+    // tlb_exception_state_t state;
+    // tlb_entry_t *entry;
+    // thread_table_t *thread;
+    // int odd;
+    // int valid;
+    // int tlb_table_index;
+
+    // _tlb_get_exception_state(&state);
+    // thread = thread_get_current_thread_entry();
+
+    // odd = ODD_VPN(state.badvpn2);
+
+    // /* Loop through the pagetable and find a tlb_entry with the same vpn2. */
+    // for (i = 0; i < PAGETABLE_ENTRIES; i++) {
+    //     kprintf("looking\n");
+    //     entry = &thread->pagetable->entries[i];
+
+    //     valid = odd ? entry->V1 : entry->V0;
+
+    //     if (entry->VPN2 == state.badvpn2 && valid) {
+    //         entry->ASID = state.asid;
+
+    //         /* tlb_table_index is negative if there is no space in the tlb. */
+    //         tlb_table_index = _tlb_probe(entry);
+
+    //         if (tlb_table_index < 0) {
+    //             _tlb_write_random(entry);
+    //         } else {
+    //             /* Write one pagetable. */
+    //             _tlb_write(entry, tlb_table_index, 1);
+    //         }
+    //     }
+    // }
+
+    // /* Close the thread if userland and give kernel panic if the kernel is
+    //  * generating the exception. */
+    // if (thread->user_context->status & USERLAND_ENABLE_BIT) {
+    //     kwrite("Access violation\n");
+
+    //     /* Remove the pagetable. */
+    //     vm_destroy_pagetable(thread->pagetable);
+    //     thread->pagetable = NULL;
+
+    //     /* Close the thread. */
+    //     thread_finish();
+    // } else {
+    //     KERNEL_PANIC("Unhandled TLB load exception");
+    // }
 }
 
 void tlb_store_exception(void)
 {
-    int i;
-    tlb_exception_state_t state;
-    tlb_entry_t *entry;
-    thread_table_t *thread;
-    int odd;
-    int valid;
-    int tlb_table_index;
+    load_store();
+    // int i;
+    // tlb_exception_state_t state;
+    // tlb_entry_t *entry;
+    // thread_table_t *thread;
+    // int odd;
+    // int valid;
+    // int tlb_table_index;
 
-    _tlb_get_exception_state(&state);
-    thread = thread_get_current_thread_entry();
+    // _tlb_get_exception_state(&state);
+    // thread = thread_get_current_thread_entry();
 
-    odd = ODD_VPN(state.badvpn2);
+    // odd = ODD_VPN(state.badvpn2);
 
-    /* Loop through the pagetable and find a tlb_entry with the same vpn2. */
-    for (i = 0; i < PAGETABLE_ENTRIES; i++) {
-        entry = &thread->pagetable->entries[i];
+    // /* Loop through the pagetable and find a tlb_entry with the same vpn2. */
+    // for (i = 0; i < PAGETABLE_ENTRIES; i++) {
+    //     entry = &thread->pagetable->entries[i];
 
-        valid = odd ? entry->V1 : entry->V0;
+    //     valid = odd ? entry->V1 : entry->V0;
 
-        if (entry->VPN2 == state.badvpn2 && valid) {
-            entry->ASID = state.asid;
+    //     if (entry->VPN2 == state.badvpn2 && valid) {
+    //         entry->ASID = state.asid;
 
-            /* tlb_table_index is negative if there is no space in the tlb. */
-            tlb_table_index = _tlb_probe(entry);
+    //         /* tlb_table_index is negative if there is no space in the tlb. */
+    //         tlb_table_index = _tlb_probe(entry);
 
-            if (tlb_table_index < 0) {
-                _tlb_write_random(entry);
-            } else {
-                /* Write one pagetable. */
-                _tlb_write(entry, tlb_table_index, 1);
-            }
-        }
-    }
+    //         if (tlb_table_index < 0) {
+    //             _tlb_write_random(entry);
+    //         } else {
+    //             /* Write one pagetable. */
+    //             _tlb_write(entry, tlb_table_index, 1);
+    //         }
+    //     }
+    // }
 
-    /* Close the thread if userland and give kernel panic if the kernel is
-     * generating the exception. */
-    if (thread->user_context->status & USERLAND_ENABLE_BIT) {
-        kwrite("Access violation\n");
-        thread_finish();
-    } else {
-        KERNEL_PANIC("Unhandled TLB store exception");
-    }
+    // /* Close the thread if userland and give kernel panic if the kernel is
+    //  * generating the exception. */
+    // if (thread->user_context->status & USERLAND_ENABLE_BIT) {
+    //     kwrite("Access violation\n");
+
+    //     /* Remove the pagetable. */
+    //     vm_destroy_pagetable(thread->pagetable);
+    //     thread->pagetable = NULL;
+
+    //     /* Close the thread. */
+    //     thread_finish();
+    // } else {
+    //     KERNEL_PANIC("Unhandled TLB store exception");
+    // }
 }
 
 /**
