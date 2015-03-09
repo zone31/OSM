@@ -105,6 +105,8 @@ Our implementation has some issues, but the idea is as follows:
 4b. ???
 5. Check if it is a kernel process. If so, do a kernel panic. If not, terminate the process.
 
+Our implementation fails, because it looks for an address that is off by a few bytes. A small test showed, that the difference between the correct address and address asked for is: (size of allocation)/2048 rounded up to nearest integer. A guess to why this error occurs, is because the VPN is exactly 2048 bytes and it might be allocated twice by mistake.
+
 \section*{Task 2}
 
 \end{document}
