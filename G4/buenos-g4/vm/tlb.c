@@ -68,6 +68,7 @@ void load_store(void)
     int tlb_table_index;
 
     _tlb_get_exception_state(&state);
+    kprintf("badvpn2: %d, badvaddr: %d, asid: %d\n",state.badvpn2,state.badvaddr,state.asid);
     thread = thread_get_current_thread_entry();
 
     // odd = ODD_VPN(state.badvaddr);
@@ -78,11 +79,11 @@ void load_store(void)
         kprintf("looking %d\n", i);
         entry = &thread->pagetable->entries[i];
 
-        valid = odd ? entry->V1 : entry->V0;
+        valid = odd ? entry->V0 : entry->V1;
 
         kprintf("valid %d\n", valid);
 
-        kprintf("comparing VPN2 %d == badvpn2 %d\n", entry->VPN2, state.badvpn2);
+        kprintf("comparing VPN2 %d == badvpn2 %d, diff: %d\n", entry->VPN2, state.badvpn2,entry->VPN2-state.badvpn2);
         if (state.badvpn2)
             kprintf("not 0 statebadvpn2\n");
         if (entry->VPN2)
