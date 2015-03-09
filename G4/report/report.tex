@@ -96,15 +96,35 @@ numbers=none}
 \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
 \section*{Task 1}
-On the MIPS architecture, the TLB is handled in software. This means that the CPU calls interrupts, when a virtual memory address is tried to be accessed, while it is not in memory. When the interrupts are called, it is up to the operating system to handle and solve them.
-Our implementation has some issues, but the idea is as follows: 
+On the MIPS architecture, the TLB is handled in software. This means that the CPU calls interrupts, when a virtual memory address is tried to be accessed, while it is not in memory. When the interrupts are called, it is the operating systems responsibility to handle and solve them.
+Our implementation has some issues, but the idea is as follows, and can be
+viewed in \textit{vm/tlb.c}:
 \begin{enumerate}
-    \item Iterate through the page table, to find the Virtual Page Number (VPN) the instruction used.
-    \item Check if the valid bit is set for the found page, if so, continue, otherwise go to 6.
-    \item ???
-    \item Overwrite a random page to solve the TLB interrupt
-    \item ???
-    \item Check if it is a kernel process. If so, do a kernel panic. If not, terminate the process.
+    \item Get the state of the exception with a call to
+        \texttt{\_tlb_get\_exception\_state} which is a function implemented in
+        assembly code.  The call returns a structure containing a badvpn2, the
+        virtual page number failing, a badvaddr the address failing and an asid
+        the id of the thread failing.
+    \item Iterate through the page table, to find the Virtual Page Number (VPN)
+        the instruction used.  Found in step one.
+    \item Check if the valid bit is set for the found page, if so, continue,
+        otherwise report an error either by a kernel panic or by closing the
+        thread and giving the user an equivalent error to a segmentation fault.
+    \item We now try and find empty spot in the TLB, we do this with the
+        assembly implemented function \texttt{\_tlb\_probe}, the function
+        returns a negative value if no space is free in the TLB and an index in
+        the TLB array otherwise.
+    \item If the return value of \texttt{\_tlb\_probe} is positive we write to
+        the given entry in the TLB by calling \texttt{\_tlb\_write}, which is
+        also implemented in assembly.  Otherwise we use
+        \texttt{\_tlb\_write\_random} to write the entry to a random location in
+        the TLB.
+    \item If the write to the TLB was successful the function returns not
+        without executing the final step.
+    \item Lastly we check if a userland or a kernel thread is running.  If a
+        userland thread is running we removes the pagetable for that thread and
+        close the thread reporting a segmentation fault like error to the user.
+        If the thread is a kernel thread a \texttt{KERNEL PANIC} is created.
 \end{enumerate}
 
 Our implementation fails, because it looks for an address that is off by a few bytes. A small test showed, that the difference between the correct address and address asked for is: (size of allocation)/2048 rounded up to nearest integer. A guess to why this error occurs, is because the VPN is exactly 2048 bytes and it might be allocated twice by mistake.
