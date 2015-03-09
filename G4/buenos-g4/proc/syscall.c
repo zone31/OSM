@@ -87,6 +87,19 @@ int syscall_join(process_id_t pid) {
     return process_join(pid);
 }
 
+
+/**
+ * Implementation missing, should call vm ,and assign more for the heap,
+ * but since our tlb exception does not work, this cannot be tested correctly.
+ * Since malloc an free does not limit the memory pointer to move all around
+ * the page table, we simply must create a new page, wich is impossible
+ */
+void* syscall_memlimit(void* new_end){
+ return new_end;
+
+}
+
+
 /**
  * Handle system calls. Interrupts are enabled when this function is
  * called.
@@ -123,6 +136,9 @@ void syscall_handle(context_t *user_context)
         break;
     case SYSCALL_JOIN:
         V0 = syscall_join((process_id_t) A1);
+        break;
+    case SYSCALL_MEMLIMIT:
+        V0 = (int)syscall_memlimit((void*)A1);
         break;
     default:
         KERNEL_PANIC("Unhandled system call\n");
