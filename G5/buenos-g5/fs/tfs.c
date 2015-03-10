@@ -76,7 +76,7 @@ typedef struct {
 /** 
  * Initialize trivial filesystem. Allocates 1 page of memory dynamically for
  * filesystem data structure, tfs data structure and buffers needed.
- * Sets fs_t and tfs_t fields. If initialization is succesful, returns
+ * Sets fs_t and tfs_t fields. If initialization is successful, returns
  * pointer to fs_t data structure. Else NULL pointer is returned.
  *
  * @param Pointer to gbd-device performing tfs.
