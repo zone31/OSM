@@ -266,7 +266,7 @@ int tfs_close(fs_t *fs, int fileid)
  * @param filename File name of the file to be created
  * @param size Size of the file to be created
  *
- * @return If file allready exists or not enough space return VFS_ERROR,
+ * @return If file already exists or not enough space return VFS_ERROR,
  * otherwise return VFS_OK.
  */
 int tfs_create(fs_t *fs, char *filename, int size)
