@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Script skrevet en af anden gruppe
+
+make clean &&
+make &&
+cd tests &&
+make clean &&
+make &&
+cd .. &&
+fyams-sim buenos initprog=[disk]$1 &&
+make clean &&
+cd tests &&
+make clean &&
+cd ..
