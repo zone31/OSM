@@ -2,14 +2,28 @@
 
 # Script skrevet en af anden gruppe
 
-make clean &&
-make &&
-cd tests &&
-make clean &&
-make &&
-cd .. &&
-fyams-sim buenos initprog=[disk]$1 &&
-make clean &&
-cd tests &&
-make clean &&
+
+make clean
+make
+cd tests
+make clean
+make
+../util/tfstool create ../fyams.harddisk 2048 disk
+files=( $(find . -type f -executable -printf "%f\n") )
+
+
+for i in "${files[@]}"
+do
+  ../util/tfstool write ../fyams.harddisk $i $i
+   # do whatever on $i
+done
+
+../util/tfstool list ../fyams.harddisk
+
+
+cd ..
+fyams-sim buenos initprog=[disk]$1
+make clean
+cd tests
+make clean
 cd ..
