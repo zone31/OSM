@@ -221,7 +221,7 @@ int tfs_open(fs_t *fs, char *filename)
   req.sem       = NULL;
   r = tfs->disk->read_block(tfs->disk,&req);
   if(r == 0) {
-    /* An error occured during read. */
+    /* An error occurred during read. */
     semaphore_V(tfs->lock);
     return VFS_ERROR;
   }
