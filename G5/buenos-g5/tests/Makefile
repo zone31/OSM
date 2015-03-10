@@ -36,14 +36,15 @@
 # $Id: Makefile,v 1.6 2005/05/09 00:05:44 jaatroko Exp $
 
 # Add your _userland_ program sources to this variable:
-SOURCES  := halt.c readwrite.c exec.c exec_child1.c exec_child2.c hw.c barrier.c barrier_prog0.c barrier_prog1.c
+SOURCES  := halt.c readwrite.c exec.c exec_child1.c exec_child2.c hw.c\
+	        barrier.c barrier_prog0.c barrier_prog1.c open_n_write_test.c
 
 OBJECTS  := $(patsubst %.c, %.o, $(SOURCES))
 TARGETS  := $(patsubst %.o, %, $(OBJECTS))
 
 # crt.o must be the first one and the $(SYSLIBS) must come first in
 # the pre-requisites list (or object files list).
-SYSLIBS := crt.o _syscall.o lib.o open_n_write.c
+SYSLIBS := crt.o _syscall.o lib.o
 
 # Compiler configuration
 CC      := mips-elf-gcc

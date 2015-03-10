@@ -1,5 +1,4 @@
 #include "tests/lib.h"
-#include "fs/vmf.h"
 
 int main()
 {
@@ -14,7 +13,7 @@ int main()
     printf("create returned %d\n", ret_val);
 
     /* Open the file. */
-    filehandle = retval = syscall_open(filename);
+    filehandle = ret_val = syscall_open(filename);
 
     printf("open returned %d\n", ret_val);
 
