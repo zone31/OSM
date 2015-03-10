@@ -240,7 +240,7 @@ int tfs_open(fs_t *fs, char *filename)
 
 /**
  * Closes file. Implements fs.close(). There is nothing to be done, no
- * data strucutures or similar are reserved for file. Returns VFS_OK.
+ * data structures or similar are reserved for file. Returns VFS_OK.
  *
  * @param fs Pointer to fs data structure of the device.
  * @param fileid File id (inode block number) of the file.
@@ -258,7 +258,7 @@ int tfs_close(fs_t *fs, int fileid)
 
 /**
  * Creates file of given size. Implements fs.create(). Checks that
- * file name doesn't allready exist in directory block.Allocates
+ * file name doesn't already exist in directory block.Allocates
  * enough blocks from the allocation block for the file (1 for inode
  * and then enough for the file of given size). Reserved blocks are zeroed.
  *
