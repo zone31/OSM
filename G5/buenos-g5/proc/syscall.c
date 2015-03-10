@@ -34,6 +34,7 @@
  *
  */
 #include "fs/vfs.h"
+#include "vfs.h"
 #include "kernel/cswitch.h"
 #include "kernel/halt.h"
 #include "kernel/panic.h"
@@ -53,15 +54,15 @@
 #define V0 user_context->cpu_regs[MIPS_REGISTER_V0]
 
 process_id_t syscall_exec(const char *filename) {
-  return process_spawn(filename);
+    return process_spawn(filename);
 }
 
 void syscall_exit(int retval) {
-  process_finish(retval);
+    process_finish(retval);
 }
 
 int syscall_join(process_id_t pid) {
-  return process_join(pid);
+    return process_join(pid);
 }
 
 /**
@@ -73,50 +74,59 @@ int syscall_join(process_id_t pid) {
  */
 void syscall_handle(context_t *user_context)
 {
-  /* When a syscall is executed in userland, register a0 contains
-   * the number of the syscall. Registers a1, a2 and a3 contain the
-   * arguments of the syscall. The userland code expects that after
-   * returning from the syscall instruction the return value of the
-   * syscall is found in register v0. Before entering this function
-   * the userland context has been saved to user_context and after
-   * returning from this function the userland context will be
-   * restored from user_context.
-   */
-  switch (A0) {
-  case SYSCALL_HALT:
-    halt_kernel();
-    break;
-  case SYSCALL_READ:
-    V0 = io_read((int) A1, (void*) A2, (int) A3);
-    break;
-  case SYSCALL_WRITE:
-    V0 = io_write((int) A1, (void*) A2, (int) A3);
-    break;
-  case SYSCALL_EXEC:
-    V0 = syscall_exec((char*) A1);
-    break;
-  case SYSCALL_EXIT:
-    syscall_exit((int) A1);
-    break;
-  case SYSCALL_JOIN:
-    V0 = syscall_join((process_id_t) A1);
-    break;
-  case SYSCALL_SEM_OPEN:
-    V0 = (uint32_t) usr_sem_open((char*) A1, A2);
-    break;
-  case SYSCALL_SEM_PROCURE:
-    V0 = usr_sem_p((usr_sem_t*) A1);
-    break;
-  case SYSCALL_SEM_VACATE:
-    V0 = usr_sem_v((usr_sem_t*) A1);
-    break;
-  case SYSCALL_SEM_DESTROY:
-    V0 = usr_sem_destroy((usr_sem_t*) A1);
-    break;
-  default:
-    KERNEL_PANIC("Unhandled system call\n");
-  }
+    /* When a syscall is executed in userland, register a0 contains
+     * the number of the syscall. Registers a1, a2 and a3 contain the
+     * arguments of the syscall. The userland code expects that after
+     * returning from the syscall instruction the return value of the
+     * syscall is found in register v0. Before entering this function
+     * the userland context has been saved to user_context and after
+     * returning from this function the userland context will be
+     * restored from user_context.
+     */
+    switch (A0) {
+        case SYSCALL_HALT:
+            halt_kernel();
+            break;
+        case SYSCALL_READ:
+            V0 = io_read((int) A1, (void*) A2, (int) A3);
+            break;
+        case SYSCALL_WRITE:
+            V0 = io_write((int) A1, (void*) A2, (int) A3);
+            break;
+        case SYSCALL_EXEC:
+            V0 = syscall_exec((char*) A1);
+            break;
+        case SYSCALL_EXIT:
+            syscall_exit((int) A1);
+            break;
+        case SYSCALL_JOIN:
+            V0 = syscall_join((process_id_t) A1);
+            break;
+        case SYSCALL_SEM_OPEN:
+            V0 = (uint32_t) usr_sem_open((char*) A1, A2);
+            break;
+        case SYSCALL_SEM_PROCURE:
+            V0 = usr_sem_p((usr_sem_t*) A1);
+            break;
+        case SYSCALL_SEM_VACATE:
+            V0 = usr_sem_v((usr_sem_t*) A1);
+            break;
+        case SYSCALL_SEM_DESTROY:
+            V0 = usr_sem_destroy((usr_sem_t*) A1);
+            break;
+        case SYSCALL_OPEN:
+            V0 = vfs_open((const char *) A1);
+            break;
+        case SYSCALL_WRITE:
+            V0 = vfs_write((int) A1, (void *) A2, (int) A3);
+            break;
+        case SYSCALL_CREATE:
+            V0 = vfs_create((const char *) A1, (int) A2);
+            break;
+        default:
+                KERNEL_PANIC("Unhandled system call\n");
+    }
 
-  /* Move to next instruction after system call */
-  user_context->pc += 4;
+    /* Move to next instruction after system call */
+    user_context->pc += 4;
 }
