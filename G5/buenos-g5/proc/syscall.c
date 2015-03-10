@@ -34,7 +34,6 @@
  *
  */
 #include "fs/vfs.h"
-#include "vfs.h"
 #include "kernel/cswitch.h"
 #include "kernel/halt.h"
 #include "kernel/panic.h"
@@ -86,12 +85,6 @@ void syscall_handle(context_t *user_context)
     switch (A0) {
         case SYSCALL_HALT:
             halt_kernel();
-            break;
-        case SYSCALL_READ:
-            V0 = io_read((int) A1, (void*) A2, (int) A3);
-            break;
-        case SYSCALL_WRITE:
-            V0 = io_write((int) A1, (void*) A2, (int) A3);
             break;
         case SYSCALL_EXEC:
             V0 = syscall_exec((char*) A1);
