@@ -1,0 +1,162 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+\usepackage{graphicx} % \includegraphics
+\usepackage{fancyhdr, amsmath, amssymb, comment, caption, placeins, subfigure,
+    fixltx2e, changepage, listings, courier, soul, hyperref, geometry,
+enumerate, listings, enumitem}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+
+\author{\Large{Magnus N\o rskov Stavngaard} \\
+    \texttt{magnus@stavngaard.dk}
+    \\\\
+    \Large{Mark Jan Jacobi} \\
+    \texttt{mark@jacobi.pm}
+    \\\\
+    \Large{Mads Ynddal} \\
+    \texttt{mynddal@me.com}
+}
+
+\lstdefinestyle{customc} {
+    belowcaptionskip=1\baselineskip,
+    breaklines=true,
+    xleftmargin=\parindent,
+    language=C,
+    showstringspaces=false,
+    keywordstyle=\bfseries\color{green!40!black},
+    morekeywords={size_t,node,heap,pthread_mutex_t,node_t,queue_t,queue,semaphore_t,semstatus,spinlock_t,
+    usr_sem_t_wrapper,usr_sem_t,uint32_t},
+    commentstyle=\itshape\color{black},
+    identifierstyle=\color{blue},
+    stringstyle=\color{purple},
+}
+
+\lstset{
+    basicstyle=\footnotesize,
+    language=C,
+numbers=none}
+\lstset{literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+    {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+    {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+    {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+    {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+    {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+    {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+    {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+    {€}{{\EUR}}1 {£}{{\pounds}}1
+}
+
+\title{
+    \vspace{3cm}
+    \Huge{OSM} \\
+    \Large{G3}
+}
+
+\pagestyle{fancy}
+\lhead{\small{Magnus S. Mark J. Mads Y.}}
+\chead{\date{\today}}
+\rhead{University of Copenhagen}
+% \lfoot{}
+% \cfoot{}
+% \rfoot{}
+
+% Change indent length of paragraph not after a header.
+\setlength{\parindent}{0cm}
+
+% Remove page numbering in the beginning
+\pagenumbering{gobble}
+
+\begin{document}
+%% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+%% `natbio-farve` to use SCIENCE's new colors and logo.
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]
+{include/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]
+{include/ku-farve}}}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
+
+\clearpage
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+%\tableofcontents
+
+%\newpage
+
+\pagenumbering{arabic} % Arabic page numbers (and reset to 1)
+
+\section*{Task 1}
+On the MIPS architecture, the TLB is handled in software. This means that the CPU calls interrupts, when a virtual memory address is tried to be accessed, while it is not in memory. When the interrupts are called, it is the operating systems responsibility to handle and solve them.
+Our implementation has some issues, but the idea is as follows, and can be
+viewed in \textit{vm/tlb.c}:
+\begin{enumerate}
+    \item Get the state of the exception with a call to
+        \texttt{\_tlb_get\_exception\_state} which is a function implemented in
+        assembly code.  The call returns a structure containing a badvpn2, the
+        virtual page number failing, a badvaddr the address failing and an asid
+        the id of the thread failing.
+    \item Iterate through the page table, to find the Virtual Page Number (VPN)
+        the instruction used.  Found in step one.
+    \item Check if the valid bit is set for the found page, if so, continue,
+        otherwise report an error either by a kernel panic or by closing the
+        thread and giving the user an equivalent error to a segmentation fault.
+    \item We now try and find empty spot in the TLB, we do this with the
+        assembly implemented function \texttt{\_tlb\_probe}, the function
+        returns a negative value if no space is free in the TLB and an index in
+        the TLB array otherwise.
+    \item If the return value of \texttt{\_tlb\_probe} is positive we write to
+        the given entry in the TLB by calling \texttt{\_tlb\_write}, which is
+        also implemented in assembly.  Otherwise we use
+        \texttt{\_tlb\_write\_random} to write the entry to a random location in
+        the TLB.
+    \item If the write to the TLB was successful the function returns not
+        without executing the final step.
+    \item Lastly we check if a userland or a kernel thread is running.  If a
+        userland thread is running we removes the pagetable for that thread and
+        close the thread reporting a segmentation fault like error to the user.
+        If the thread is a kernel thread a \texttt{KERNEL PANIC} is created.
+\end{enumerate}
+
+Our implementation fails, because it looks for an address that is off by a few bytes. A small test showed, that the difference between the correct address and address asked for is: (size of allocation)/2048 rounded up to nearest integer. A guess to why this error occurs, is because the VPN is exactly 2048 bytes and it might be allocated twice by mistake.
+
+\section*{Task 2}
+    We haven't made a working task 2, we used all the time we had trying to get
+    task 1 to work so their wasn't any time for task 2.  We will here try to
+    explain what task two should have done had it been implemented. \\
+
+    In task two we were asked to create a function to help the implementation of
+    malloc to allocate space on the heap.  The function to implement is called
+    \texttt{syscall\_memlimit} and has the prototype,
+
+    \begin{lstlisting}[style=customc]
+void * syscall_memlimit(void *new_end);
+    \end{lstlisting}
+
+    The function should allocate more space for userland processes when they
+    need it.  The function should try to move a heap pointer to the new point
+    \texttt{heap\_end}, if this is possible the function should return a pointer
+    to the new space allocated, if not the function should return \texttt{NULL}.
+    If the function is given NULL as a parameter it should return the current
+    end of the heap.  Normally a user process can both allocate and free memory
+    from the heap, in Buenos freeing space on the heap is not implemented and
+    therefore the heap can always only grow and never shrink.  This means that
+    if a user attempts to decrease the heapsize the function should return an
+    error, either a \texttt{NULL} pointer or a \texttt{KERNEL PANIC}.  \\
+
+    The userland library \texttt{tests/lib.c} already contains an implementation
+    of \texttt{malloc}, although this \texttt{malloc} implementation can only
+    allocate 256 bytes.  If we had implemented \texttt{syscall\_memlimit} we
+    could use this function in malloc when malloc runs out of memory to obtain
+    more space from the system that can be used by the user.
+
+\end{document}
