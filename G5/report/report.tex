@@ -55,7 +55,7 @@ numbers=none}
 \title{
     \vspace{3cm}
     \Huge{OSM} \\
-    \Large{G3}
+    \Large{G5}
 }
 
 \pagestyle{fancy}
@@ -89,9 +89,9 @@ numbers=none}
 
 \newpage
 
-%\tableofcontents
+\tableofcontents
 
-%\newpage
+\newpage
 
 \pagenumbering{arabic} % Arabic page numbers (and reset to 1)
 
@@ -103,8 +103,31 @@ functions to an already existing simple filesystem. \\
 
 The system calls we have implemented are explained under this.
 
+
+\subsection{syscall\_open}
+The function is defined as such:
+    \begin{lstlisting}[style=customc]
+int syscall_open(const char* pathname);
+    \end{lstlisting}
+
+This function returns an file handle integer. This is later used to identify 
+the file for other file modifying functions, such as $read,write,tell,seek,close$.
+The pathname needs to have the volume name in the beginning, and then the file path.
+This is defined as such : $[disk]file$.\\
+
+In the implementation, the userspace program calls $syscall\_open()$ in the lib.c file, which wraps the call
+into the $syscall.c$ via mips assembly. This then calls the $vfs\_open$. In the vfs\_open file, we keep a list of files.
+this list is not dynamic, and can contain $512$ files. \\
+
+The first 3 files are reserved for the system signals, $IN$, $OUT$ and $ERROR$. These are mapped by numbers, where $IN=0$,$OUT=1$,$ERROR=2$. Since the file handle integer return is directly mapped to the list of files, we then occupy the first 3 at initiation. \\
+
+This also makes the file systemcalls able to modify the standard input, output and error, by setting the filehandle accordingly.
+
+
+
+
 \subsection{syscall\_close}
-Syscall close is defined as,
+Syscall close is defined as:
 
     \begin{lstlisting}[style=customc]
 int syscall_close(int filehandle);
@@ -139,7 +162,20 @@ int syscall_close(int filehandle)
 Therefore a user can close an open file by making a call to
 \texttt{syscall\_close}.
 
+\subsection{syscall\_create}
+Syscall create is defined as:
+    \begin{lstlisting}[style=customc]
+int syscall_create(const char* pathname, int size);
+    \end{lstlisting}
+syscall\_create registers a file on the disk with the specified file size. The file can then be opened, written to and read from by the syscalls described in this section.
+The syscall is implemented by calling the vfs\_create function defined by the virtual filesystem in the kernel.
+
+
 \subsection{syscall\_remove}
+Syscall remove is defined as:
+    \begin{lstlisting}[style=customc]
+int syscall_remove(const char* pathname);
+    \end{lstlisting}
 Syscall remove is used to remove a file, the syscall is implemented by calling
 the function, \texttt{vfs\_remove}, from the file \texttt{fs/vfs.c}.  The
 function removes the file from the filesystem by calling a filesystem dependent
@@ -168,7 +204,23 @@ int syscall_delete(const char *filename)
 So to call \texttt{syscall\_remove} one has to call the function
 \texttt{syscall\_delete}.
 
+
+
+\subsection{syscall\_seek}
+Syscall seek is defined as:
+    \begin{lstlisting}[style=customc]
+int syscall_seek(int filehandle, int offset);
+    \end{lstlisting}
+
+syscall\_seek changes the offset to read and write from for a filehandle.
+The syscall is implemented, by finding the filehandle and acquire a semaphore lock. Then the seek\_position variable is changed to the absolute postion defined in the parameter to the function. The semphore is released before the function returns.
+
+
 \subsection{syscall\_tell}
+Syscall tell is defined as:
+    \begin{lstlisting}[style=customc]
+int syscall_tell(int filehandle)
+    \end{lstlisting}
 The function tell the current position in the file relative the start of the
 file.  The position returned is where the next byte is to be read or written,
 we have implemented \texttt{tell} in the file \texttt{fs/vfs.c}.  The
@@ -205,5 +257,29 @@ read the position.  A user has access to the function through a syscall
 interface.  We have implemented wrappers in \texttt{proc/syscall.c} and
 \texttt{tests/lib.c}.
 
+\subsection{syscall\_read}
+Syscall read is defined as:
+    \begin{lstlisting}[style=customc]
+int syscall_read(int filehandle, void* buffer, int length);
+    \end{lstlisting}
+
+syscall\_read reads a series of bytes from a filehandle into a buffer. To avoid reading more than expected (causing an unhandled buffer overflow), a length is defnied as parameter.
+The read syscall is handled by sorting out, what kind of read is needed. The function io\_read determines if the filehandle is STDIN or a file. In case of TTY, the tty\_read\_stdin call is used, otherwise vfs\_write is called.
+
+\subsection{syscall\_write}
+Syscall write is defined as:
+    \begin{lstlisting}[style=customc]
+int syscall_write(int filehandle, void const* buffer, int length)
+    \end{lstlisting}
+syscall\_write writes a series of bytes to a filehandle from a buffer. To avoid writing longer than expected (causing an unhandled buffer overflow), a length is defined as parameter.
+The write syscall is handled by sorting out, what kind of write is needed. The function io\_write determines if the filehandle is STDOUT, STDERR or a file. In case of TTY, the tty\_write\_stdout and tty\_write\_stderr calls are used, otherwise vfs\_write is called.
+
+
+\section{Task 2}
+In this task we were asked to implement a better filesystem than the simple one
+that was shipped with Buenos.  When we create a file in Buenos we have to know
+its size beforehand, the filesystem can't itself expand a file naturally as it
+is written.  We were asked to implement a function that allocates more space on
+the filesystem if a write goes over the bound of the maximum filelength.
 
 \end{document}
