@@ -663,7 +663,7 @@ int vfs_tell(openfile_t file)
     semaphore_V(openfile_table.sem);
 
     vfs_end_op();
-    kprintf("File: %d seek: %d\n",(int)file, seek);
+    //kprintf("File: %d seek: %d\n",(int)file, seek);
     return seek;
 }
 /**
@@ -681,7 +681,7 @@ int vfs_seek(openfile_t file, int seek_position)
 {
     openfile_entry_t *openfile;
 
-    kprintf("File: %d seek: %d\n",(int)file, seek_position);
+    //kprintf("File: %d seek: %d\n",(int)file, seek_position);
     if (vfs_start_op() != VFS_OK)
         return VFS_UNUSABLE;
 

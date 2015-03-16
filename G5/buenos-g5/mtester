@@ -23,7 +23,7 @@ done
 
 cd ..
 fyams-sim buenos initprog=[disk]$1
-make clean
-cd tests
-make clean
-cd ..
+#make clean
+#cd tests
+#make clean
+#cd ..

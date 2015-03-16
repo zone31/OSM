@@ -37,7 +37,8 @@
 
 # Add your _userland_ program sources to this variable:
 SOURCES  := halt.c readwrite.c exec.c exec_child1.c exec_child2.c hw.c\
-	        barrier.c barrier_prog0.c barrier_prog1.c open_n_write_test.c
+	        barrier.c barrier_prog0.c barrier_prog1.c open_n_write_test.c\
+					proc_files.c proc_file_help.c
 
 OBJECTS  := $(patsubst %.c, %.o, $(SOURCES))
 TARGETS  := $(patsubst %.o, %, $(OBJECTS))
