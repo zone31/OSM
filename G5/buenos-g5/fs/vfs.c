@@ -51,43 +51,43 @@
 
 /* Mounted filesystem information structure. */
 typedef struct {
-  /* Pointer to filesystem driver. */
-  fs_t *filesystem;
+    /* Pointer to filesystem driver. */
+    fs_t *filesystem;
 
-  /* Name of the mountpoint. */
-  char mountpoint[VFS_NAME_LENGTH];
+    /* Name of the mountpoint. */
+    char mountpoint[VFS_NAME_LENGTH];
 } vfs_entry_t;
 
 /* Open file information */
 typedef struct {
-  /* Filesystem in which this open file is. */
-  fs_t *filesystem;
+    /* Filesystem in which this open file is. */
+    fs_t *filesystem;
 
-  /* Filesystem specific file id for this open file. */
-  int fileid;
+    /* Filesystem specific file id for this open file. */
+    int fileid;
 
-  /* Current seek position in the file. */
-  int seek_position;
+    /* Current seek position in the file. */
+    int seek_position;
 } openfile_entry_t;
 
 
 /* Table of mounted filesystems. */
 static struct {
-  /* Binary semaphore for locking this table. */
-  semaphore_t *sem;
+    /* Binary semaphore for locking this table. */
+    semaphore_t *sem;
 
-  /* Table of mounted filesystems. */
-  vfs_entry_t filesystems[CONFIG_MAX_FILESYSTEMS];
+    /* Table of mounted filesystems. */
+    vfs_entry_t filesystems[CONFIG_MAX_FILESYSTEMS];
 } vfs_table;
 
 
 /* Table of open files. */
 static struct {
-  /* Binary semaphore for locking this table. */
-  semaphore_t *sem;
+    /* Binary semaphore for locking this table. */
+    semaphore_t *sem;
 
-  /* Table of open files. */
-  openfile_entry_t files[CONFIG_MAX_OPEN_FILES];
+    /* Table of open files. */
+    openfile_entry_t files[CONFIG_MAX_OPEN_FILES];
 } openfile_table;
 
 /* The following variables are used to synchronize the forced unmount
@@ -118,35 +118,35 @@ static int vfs_usable = 0;
 
 void vfs_init(void)
 {
-  int i;
+    int i;
 
-  vfs_table.sem = semaphore_create(1);
-  openfile_table.sem = semaphore_create(1);
+    vfs_table.sem = semaphore_create(1);
+    openfile_table.sem = semaphore_create(1);
 
-  KERNEL_ASSERT(vfs_table.sem != NULL && openfile_table.sem != NULL);
+    KERNEL_ASSERT(vfs_table.sem != NULL && openfile_table.sem != NULL);
 
-  /* Clear table of mounted filesystems. */
-  for(i=0; i<CONFIG_MAX_FILESYSTEMS; i++) {
-    vfs_table.filesystems[i].filesystem = NULL;
-  }
+    /* Clear table of mounted filesystems. */
+    for(i=0; i<CONFIG_MAX_FILESYSTEMS; i++) {
+        vfs_table.filesystems[i].filesystem = NULL;
+    }
 
-  /* Clear table of open files. */
-  for (i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
-    openfile_table.files[i].filesystem = NULL;
-  }
+    /* Clear table of open files. */
+    for (i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+        openfile_table.files[i].filesystem = NULL;
+    }
 
-  for (i = 0; i < 3; i++) {
-    openfile_table.files[i].filesystem = (fs_t *) 1;
-  }
+    for (i = 0; i < 3; i++) {
+        openfile_table.files[i].filesystem = (fs_t *) 1;
+    }
 
-  vfs_op_sem = semaphore_create(1);
-  vfs_unmount_sem = semaphore_create(0);
+    vfs_op_sem = semaphore_create(1);
+    vfs_unmount_sem = semaphore_create(0);
 
-  vfs_ops = 0;
-  vfs_usable = 1;
+    vfs_ops = 0;
+    vfs_usable = 1;
 
-  kprintf("VFS: Max filesystems: %d, Max open files: %d\n",
-    CONFIG_MAX_FILESYSTEMS, CONFIG_MAX_OPEN_FILES);
+    kprintf("VFS: Max filesystems: %d, Max open files: %d\n",
+            CONFIG_MAX_FILESYSTEMS, CONFIG_MAX_OPEN_FILES);
 }
 
 /**
@@ -158,39 +158,39 @@ void vfs_init(void)
  */
 void vfs_deinit(void)
 {
-  fs_t *fs;
-  int row;
+    fs_t *fs;
+    int row;
 
-  semaphore_P(vfs_op_sem);
-  vfs_usable = 0;
-
-  kprintf("VFS: Entering forceful unmount of all filesystems.\n");
-  if (vfs_ops > 0) {
-    kprintf("VFS: Delaying force unmount until the pending %d "
-              "operations are done.\n", vfs_ops);
-    semaphore_V(vfs_op_sem);
-    semaphore_P(vfs_unmount_sem);
     semaphore_P(vfs_op_sem);
-    KERNEL_ASSERT(vfs_ops == 0);
-    kprintf("VFS: Continuing forceful unmount.\n");
-  }
+    vfs_usable = 0;
 
-  semaphore_P(vfs_table.sem);
-  semaphore_P(openfile_table.sem);
-
-  for (row = 0; row < CONFIG_MAX_FILESYSTEMS; row++) {
-    fs = vfs_table.filesystems[row].filesystem;
-    if (fs != NULL) {
-      kprintf("VFS: Forcefully unmounting volume [%s]\n",
-                vfs_table.filesystems[row].mountpoint);
-      fs->unmount(fs);
-      vfs_table.filesystems[row].filesystem = NULL;
+    kprintf("VFS: Entering forceful unmount of all filesystems.\n");
+    if (vfs_ops > 0) {
+        kprintf("VFS: Delaying force unmount until the pending %d "
+                "operations are done.\n", vfs_ops);
+        semaphore_V(vfs_op_sem);
+        semaphore_P(vfs_unmount_sem);
+        semaphore_P(vfs_op_sem);
+        KERNEL_ASSERT(vfs_ops == 0);
+        kprintf("VFS: Continuing forceful unmount.\n");
     }
-  }
 
-  semaphore_V(openfile_table.sem);
-  semaphore_V(vfs_table.sem);
-  semaphore_V(vfs_op_sem);
+    semaphore_P(vfs_table.sem);
+    semaphore_P(openfile_table.sem);
+
+    for (row = 0; row < CONFIG_MAX_FILESYSTEMS; row++) {
+        fs = vfs_table.filesystems[row].filesystem;
+        if (fs != NULL) {
+            kprintf("VFS: Forcefully unmounting volume [%s]\n",
+                    vfs_table.filesystems[row].mountpoint);
+            fs->unmount(fs);
+            vfs_table.filesystems[row].filesystem = NULL;
+        }
+    }
+
+    semaphore_V(openfile_table.sem);
+    semaphore_V(vfs_table.sem);
+    semaphore_V(vfs_op_sem);
 }
 
 /**
@@ -209,36 +209,36 @@ void vfs_deinit(void)
  */
 int vfs_mount_fs(gbd_t *disk, char *volumename)
 {
-  fs_t *filesystem;
-  int ret;
+    fs_t *filesystem;
+    int ret;
 
-  filesystem = filesystems_try_all(disk);
-  if(filesystem == NULL) {
-    kprintf("VFS: No filesystem was found on block device 0x%8.8x\n",
-    disk->device->io_address);
-    return VFS_NO_SUCH_FS;
-  }
+    filesystem = filesystems_try_all(disk);
+    if(filesystem == NULL) {
+        kprintf("VFS: No filesystem was found on block device 0x%8.8x\n",
+                disk->device->io_address);
+        return VFS_NO_SUCH_FS;
+    }
 
-  if(volumename==NULL)
-    volumename=filesystem->volume_name;
+    if(volumename==NULL)
+        volumename=filesystem->volume_name;
 
-  if(volumename[0] == '\0') {
-    kprintf("VFS: Unknown filesystem volume name,"
-      " skipping mounting\n");
-    filesystem->unmount(filesystem);
-    return VFS_INVALID_PARAMS;
-  }
+    if(volumename[0] == '\0') {
+        kprintf("VFS: Unknown filesystem volume name,"
+                " skipping mounting\n");
+        filesystem->unmount(filesystem);
+        return VFS_INVALID_PARAMS;
+    }
 
-  if((ret=vfs_mount(filesystem, volumename)) == VFS_OK) {
-    kprintf("VFS: Mounted filesystem volume [%s]\n",
-      volumename);
-  } else {
-    kprintf("VFS: Mounting of volume [%s] failed\n",
-      volumename);
-    filesystem->unmount(filesystem);
-  }
+    if((ret=vfs_mount(filesystem, volumename)) == VFS_OK) {
+        kprintf("VFS: Mounted filesystem volume [%s]\n",
+                volumename);
+    } else {
+        kprintf("VFS: Mounting of volume [%s] failed\n",
+                volumename);
+        filesystem->unmount(filesystem);
+    }
 
-  return ret;
+    return ret;
 }
 
 /**
@@ -248,27 +248,27 @@ int vfs_mount_fs(gbd_t *disk, char *volumename)
  */
 void vfs_mount_all(void)
 {
-  int i;
-  device_t *dev;
+    int i;
+    device_t *dev;
 
-  for(i=0; i<CONFIG_MAX_FILESYSTEMS; i++) {
-    dev = device_get(YAMS_TYPECODE_DISK, i);
-    if(dev == NULL) {
-      /* No more disks. */
-      return;
-    } else {
-      gbd_t *gbd;
-      gbd = (gbd_t *) dev->generic_device;
+    for(i=0; i<CONFIG_MAX_FILESYSTEMS; i++) {
+        dev = device_get(YAMS_TYPECODE_DISK, i);
+        if(dev == NULL) {
+            /* No more disks. */
+            return;
+        } else {
+            gbd_t *gbd;
+            gbd = (gbd_t *) dev->generic_device;
 
-      if(gbd == NULL) {
-        kprintf("VFS: Warning, invalid disk driver detected, "
-          "skipping\n");
-        continue;
-      }
+            if(gbd == NULL) {
+                kprintf("VFS: Warning, invalid disk driver detected, "
+                        "skipping\n");
+                continue;
+            }
 
-      vfs_mount_fs(gbd, NULL);
+            vfs_mount_fs(gbd, NULL);
+        }
     }
-  }
 }
 
 /**
@@ -283,15 +283,15 @@ void vfs_mount_all(void)
  */
 static fs_t *vfs_get_filesystem(const char *mountpoint)
 {
-  int row;
+    int row;
 
-  for (row = 0; row < CONFIG_MAX_FILESYSTEMS; row++) {
-    if(!stringcmp(vfs_table.filesystems[row].mountpoint, mountpoint)) {
-      return vfs_table.filesystems[row].filesystem;
+    for (row = 0; row < CONFIG_MAX_FILESYSTEMS; row++) {
+        if(!stringcmp(vfs_table.filesystems[row].mountpoint, mountpoint)) {
+            return vfs_table.filesystems[row].filesystem;
+        }
     }
-  }
 
-  return NULL;
+    return NULL;
 }
 
 /**
@@ -310,44 +310,44 @@ static fs_t *vfs_get_filesystem(const char *mountpoint)
  *
  */
 static int vfs_parse_pathname(const char *pathname,
-                              char *volumebuf,
-                              char *filenamebuf)
+        char *volumebuf,
+        char *filenamebuf)
 {
-  int i;
+    int i;
 
-  if (pathname[0] == '[') {
-    pathname++;
-    for(i = 0; i < VFS_NAME_LENGTH - 1; i++) {
-      if (*pathname == '\0')
-        return VFS_ERROR;
-      if (*pathname == ']') {
+    if (pathname[0] == '[') {
         pathname++;
-        break;
-      }
+        for(i = 0; i < VFS_NAME_LENGTH - 1; i++) {
+            if (*pathname == '\0')
+                return VFS_ERROR;
+            if (*pathname == ']') {
+                pathname++;
+                break;
+            }
 
-      *volumebuf = *pathname;
-      volumebuf++;
-      pathname++;
+            *volumebuf = *pathname;
+            volumebuf++;
+            pathname++;
+        }
+        if (i >= VFS_NAME_LENGTH - 1)
+            return VFS_INVALID_PARAMS;
     }
-    if (i >= VFS_NAME_LENGTH - 1)
-      return VFS_INVALID_PARAMS;
-  }
-  *volumebuf = '\0';
+    *volumebuf = '\0';
 
-  for(i = 0; i < VFS_NAME_LENGTH; i++) {
-    *filenamebuf = *pathname;
-    if (*pathname == '\0') {
-      /* Empty filenames are not allowed. */
-      if(i == 0)
-        return VFS_INVALID_PARAMS;
+    for(i = 0; i < VFS_NAME_LENGTH; i++) {
+        *filenamebuf = *pathname;
+        if (*pathname == '\0') {
+            /* Empty filenames are not allowed. */
+            if(i == 0)
+                return VFS_INVALID_PARAMS;
 
-      return VFS_OK;
+            return VFS_OK;
+        }
+        pathname++;
+        filenamebuf++;
     }
-    pathname++;
-    filenamebuf++;
-  }
 
-  return VFS_INVALID_PARAMS;
+    return VFS_INVALID_PARAMS;
 }
 
 /**
@@ -360,19 +360,19 @@ static int vfs_parse_pathname(const char *pathname,
  */
 static int vfs_start_op()
 {
-  int ret = VFS_OK;
+    int ret = VFS_OK;
 
-  semaphore_P(vfs_op_sem);
+    semaphore_P(vfs_op_sem);
 
-  if (vfs_usable) {
-    vfs_ops++;
-  } else {
-    ret = VFS_UNUSABLE;
-  }
+    if (vfs_usable) {
+        vfs_ops++;
+    } else {
+        ret = VFS_UNUSABLE;
+    }
 
-  semaphore_V(vfs_op_sem);
+    semaphore_V(vfs_op_sem);
 
-  return ret;
+    return ret;
 }
 
 /**
@@ -380,20 +380,20 @@ static int vfs_start_op()
  */
 static void vfs_end_op()
 {
-  semaphore_P(vfs_op_sem);
+    semaphore_P(vfs_op_sem);
 
-  vfs_ops--;
+    vfs_ops--;
 
-  KERNEL_ASSERT(vfs_ops >= 0);
+    KERNEL_ASSERT(vfs_ops >= 0);
 
-  /* Wake up pending unmount if VFS is now idle. */
-  if (!vfs_usable && (vfs_ops == 0))
-    semaphore_V(vfs_unmount_sem);
+    /* Wake up pending unmount if VFS is now idle. */
+    if (!vfs_usable && (vfs_ops == 0))
+        semaphore_V(vfs_unmount_sem);
 
-  if (!vfs_usable && (vfs_ops > 0))
-    kprintf("VFS: %d operations still pending\n", vfs_ops);
+    if (!vfs_usable && (vfs_ops > 0))
+        kprintf("VFS: %d operations still pending\n", vfs_ops);
 
-  semaphore_V(vfs_op_sem);
+    semaphore_V(vfs_op_sem);
 }
 
 /**
@@ -411,46 +411,46 @@ static void vfs_end_op()
  */
 int vfs_mount(fs_t *fs, char *name)
 {
-  int i;
-  int row;
+    int i;
+    int row;
 
-  KERNEL_ASSERT(name != NULL && name[0] != '\0');
+    KERNEL_ASSERT(name != NULL && name[0] != '\0');
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  semaphore_P(vfs_table.sem);
+    semaphore_P(vfs_table.sem);
 
-  for (i = 0; i < CONFIG_MAX_FILESYSTEMS; i++) {
-    if (vfs_table.filesystems[i].filesystem == NULL)
-      break;
-  }
-
-  row = i;
-
-  if(row >= CONFIG_MAX_FILESYSTEMS) {
-    semaphore_V(vfs_table.sem);
-    kprintf("VFS: Warning, maximum mount count exceeded, mount failed.\n");
-    vfs_end_op();
-    return VFS_LIMIT;
-  }
-
-  for (i = 0; i < CONFIG_MAX_FILESYSTEMS; i++) {
-    if(stringcmp(vfs_table.filesystems[i].mountpoint, name) == 0) {
-      semaphore_V(vfs_table.sem);
-      kprintf("VFS: Warning, attempt to mount 2 filesystems "
-        "with same name\n");
-      vfs_end_op();
-      return VFS_ERROR;
+    for (i = 0; i < CONFIG_MAX_FILESYSTEMS; i++) {
+        if (vfs_table.filesystems[i].filesystem == NULL)
+            break;
     }
-  }
 
-  stringcopy(vfs_table.filesystems[row].mountpoint, name, VFS_NAME_LENGTH);
-  vfs_table.filesystems[row].filesystem = fs;
+    row = i;
 
-  semaphore_V(vfs_table.sem);
-  vfs_end_op();
-  return VFS_OK;
+    if(row >= CONFIG_MAX_FILESYSTEMS) {
+        semaphore_V(vfs_table.sem);
+        kprintf("VFS: Warning, maximum mount count exceeded, mount failed.\n");
+        vfs_end_op();
+        return VFS_LIMIT;
+    }
+
+    for (i = 0; i < CONFIG_MAX_FILESYSTEMS; i++) {
+        if(stringcmp(vfs_table.filesystems[i].mountpoint, name) == 0) {
+            semaphore_V(vfs_table.sem);
+            kprintf("VFS: Warning, attempt to mount 2 filesystems "
+                    "with same name\n");
+            vfs_end_op();
+            return VFS_ERROR;
+        }
+    }
+
+    stringcopy(vfs_table.filesystems[row].mountpoint, name, VFS_NAME_LENGTH);
+    vfs_table.filesystems[row].filesystem = fs;
+
+    semaphore_V(vfs_table.sem);
+    vfs_end_op();
+    return VFS_OK;
 }
 
 /**
@@ -466,44 +466,44 @@ int vfs_mount(fs_t *fs, char *name)
  */
 int vfs_unmount(char *name)
 {
-  int i, row;
-  fs_t *fs = NULL;
+    int i, row;
+    fs_t *fs = NULL;
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  semaphore_P(vfs_table.sem);
+    semaphore_P(vfs_table.sem);
 
-  for (row = 0; row < CONFIG_MAX_FILESYSTEMS; row++) {
-    if(!stringcmp(vfs_table.filesystems[row].mountpoint, name)) {
-      fs = vfs_table.filesystems[row].filesystem;
-      break;
+    for (row = 0; row < CONFIG_MAX_FILESYSTEMS; row++) {
+        if(!stringcmp(vfs_table.filesystems[row].mountpoint, name)) {
+            fs = vfs_table.filesystems[row].filesystem;
+            break;
+        }
     }
-  }
 
-  if(fs == NULL) {
+    if(fs == NULL) {
+        semaphore_V(vfs_table.sem);
+        vfs_end_op();
+        return VFS_NOT_FOUND;
+    }
+
+    semaphore_P(openfile_table.sem);
+    for(i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+        if(openfile_table.files[i].filesystem == fs) {
+            semaphore_V(openfile_table.sem);
+            semaphore_V(vfs_table.sem);
+            vfs_end_op();
+            return VFS_IN_USE;
+        }
+    }
+
+    fs->unmount(fs);
+    vfs_table.filesystems[row].filesystem = NULL;
+
+    semaphore_V(openfile_table.sem);
     semaphore_V(vfs_table.sem);
     vfs_end_op();
-    return VFS_NOT_FOUND;
-  }
-
-  semaphore_P(openfile_table.sem);
-  for(i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
-    if(openfile_table.files[i].filesystem == fs) {
-      semaphore_V(openfile_table.sem);
-      semaphore_V(vfs_table.sem);
-      vfs_end_op();
-      return VFS_IN_USE;
-    }
-  }
-
-  fs->unmount(fs);
-  vfs_table.filesystems[row].filesystem = NULL;
-
-  semaphore_V(openfile_table.sem);
-  semaphore_V(vfs_table.sem);
-  vfs_end_op();
-  return VFS_OK;
+    return VFS_OK;
 }
 
 /**
@@ -519,68 +519,67 @@ int vfs_unmount(char *name)
  */
 openfile_t vfs_open(const char *pathname)
 {
-  openfile_t file;
-  int fileid;
-  char volumename[VFS_NAME_LENGTH];
-  char filename[VFS_NAME_LENGTH];
-  fs_t *fs = NULL;
+    openfile_t file;
+    int fileid;
+    char volumename[VFS_NAME_LENGTH];
+    char filename[VFS_NAME_LENGTH];
+    fs_t *fs = NULL;
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  if (vfs_parse_pathname(pathname, volumename, filename) != VFS_OK) {
-    vfs_end_op();
-    return VFS_INVALID_PARAMS;
-  }
-
-  semaphore_P(vfs_table.sem);
-  semaphore_P(openfile_table.sem);
-
-  for(file=0; file<CONFIG_MAX_OPEN_FILES; file++) {
-    kprintf("looking at file %d\n", file);
-    if(openfile_table.files[file].filesystem == NULL) {
-      break;
+    if (vfs_parse_pathname(pathname, volumename, filename) != VFS_OK) {
+        vfs_end_op();
+        return VFS_INVALID_PARAMS;
     }
-  }
 
-  if(file >= CONFIG_MAX_OPEN_FILES) {
-    kprintf("file is greater than MAX\n");
-    semaphore_V(openfile_table.sem);
-    semaphore_V(vfs_table.sem);
-    kprintf("VFS: Warning, maximum number of open files exceeded.");
-    vfs_end_op();
-    return VFS_LIMIT;
-  }
-
-  fs = vfs_get_filesystem(volumename);
-
-  if(fs == NULL) {
-    semaphore_V(openfile_table.sem);
-    semaphore_V(vfs_table.sem);
-    vfs_end_op();
-    return VFS_NO_SUCH_FS;
-  }
-
-  openfile_table.files[file].filesystem = fs;
-
-  semaphore_V(openfile_table.sem);
-  semaphore_V(vfs_table.sem);
-
-  fileid = fs->open(fs, filename);
-
-  if(fileid < 0) {
+    semaphore_P(vfs_table.sem);
     semaphore_P(openfile_table.sem);
-    openfile_table.files[file].filesystem = NULL;
+
+    for(file=0; file<CONFIG_MAX_OPEN_FILES; file++) {
+        if(openfile_table.files[file].filesystem == NULL) {
+            break;
+        }
+    }
+
+    if(file >= CONFIG_MAX_OPEN_FILES) {
+        kprintf("file is greater than MAX\n");
+        semaphore_V(openfile_table.sem);
+        semaphore_V(vfs_table.sem);
+        kprintf("VFS: Warning, maximum number of open files exceeded.");
+        vfs_end_op();
+        return VFS_LIMIT;
+    }
+
+    fs = vfs_get_filesystem(volumename);
+
+    if(fs == NULL) {
+        semaphore_V(openfile_table.sem);
+        semaphore_V(vfs_table.sem);
+        vfs_end_op();
+        return VFS_NO_SUCH_FS;
+    }
+
+    openfile_table.files[file].filesystem = fs;
+
     semaphore_V(openfile_table.sem);
+    semaphore_V(vfs_table.sem);
+
+    fileid = fs->open(fs, filename);
+
+    if(fileid < 0) {
+        semaphore_P(openfile_table.sem);
+        openfile_table.files[file].filesystem = NULL;
+        semaphore_V(openfile_table.sem);
+        vfs_end_op();
+        return fileid; /* negative -> error*/
+    }
+
+    openfile_table.files[file].fileid = fileid;
+    openfile_table.files[file].seek_position = 0;
+
     vfs_end_op();
-    return fileid; /* negative -> error*/
-  }
-
-  openfile_table.files[file].fileid = fileid;
-  openfile_table.files[file].seek_position = 0;
-
-  vfs_end_op();
-  return file;
+    return file;
 }
 
 /**
@@ -594,19 +593,19 @@ openfile_t vfs_open(const char *pathname)
  */
 static openfile_entry_t *vfs_verify_open(openfile_t file)
 {
-  openfile_entry_t *openfile;
+    openfile_entry_t *openfile;
 
-  if (file < 0 || file >= CONFIG_MAX_OPEN_FILES) {
-    return NULL; // Should really be VFS_INVALID_PARAMS
-  }
+    if (file < 0 || file >= CONFIG_MAX_OPEN_FILES) {
+        return NULL; // Should really be VFS_INVALID_PARAMS
+    }
 
-  openfile = &openfile_table.files[file];
+    openfile = &openfile_table.files[file];
 
-  if (openfile->filesystem == NULL) {
-    return NULL; // VFS_NOT_OPEN
-  }
+    if (openfile->filesystem == NULL) {
+        return NULL; // VFS_NOT_OPEN
+    }
 
-  return openfile;
+    return openfile;
 }
 
 /**
@@ -619,32 +618,54 @@ static openfile_entry_t *vfs_verify_open(openfile_t file)
  */
 int vfs_close(openfile_t file)
 {
-  openfile_entry_t *openfile;
-  fs_t *fs;
-  int ret;
+    openfile_entry_t *openfile;
+    fs_t *fs;
+    int ret;
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  semaphore_P(openfile_table.sem);
+    semaphore_P(openfile_table.sem);
 
-  openfile = vfs_verify_open(file);
-  if (openfile == NULL) {
+    openfile = vfs_verify_open(file);
+    if (openfile == NULL) {
+        semaphore_V(openfile_table.sem);
+        return VFS_NOT_OPEN;
+    }
+
+    fs = openfile->filesystem;
+
+    ret = fs->close(fs, openfile->fileid);
+    openfile->filesystem = NULL;
+
     semaphore_V(openfile_table.sem);
-    return VFS_NOT_OPEN;
-  }
 
-  fs = openfile->filesystem;
-
-  ret = fs->close(fs, openfile->fileid);
-  openfile->filesystem = NULL;
-
-  semaphore_V(openfile_table.sem);
-
-  vfs_end_op();
-  return ret;
+    vfs_end_op();
+    return ret;
 }
 
+int vfs_tell(openfile_t file)
+{
+    openfile_entry_t *openfile;
+
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
+
+    semaphore_P(openfile_table.sem);
+
+    openfile = vfs_verify_open(file);
+    if (openfile == NULL) {
+        semaphore_V(openfile_table.sem);
+        return VFS_NOT_OPEN;
+    }
+
+    int seek = openfile->seek_position;
+    semaphore_V(openfile_table.sem);
+
+    vfs_end_op();
+    kprintf("File: %d seek: %d\n",(int)file, seek);
+    return seek;
+}
 /**
  * Seek given file to given position. The position is not verified
  * to be within the file's size.
@@ -658,29 +679,30 @@ int vfs_close(openfile_t file)
  */
 int vfs_seek(openfile_t file, int seek_position)
 {
-  openfile_entry_t *openfile;
+    openfile_entry_t *openfile;
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    kprintf("File: %d seek: %d\n",(int)file, seek_position);
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  if(seek_position < 0) {
-    return VFS_INVALID_PARAMS;
-  }
+    if(seek_position < 0) {
+        return VFS_INVALID_PARAMS;
+    }
 
-  semaphore_P(openfile_table.sem);
+    semaphore_P(openfile_table.sem);
 
-  openfile = vfs_verify_open(file);
-  if (openfile == NULL) {
+    openfile = vfs_verify_open(file);
+    if (openfile == NULL) {
+        semaphore_V(openfile_table.sem);
+        return VFS_NOT_OPEN;
+    }
+
+    openfile->seek_position = seek_position;
+
     semaphore_V(openfile_table.sem);
-    return VFS_NOT_OPEN;
-  }
 
-  openfile->seek_position = seek_position;
-
-  semaphore_V(openfile_table.sem);
-
-  vfs_end_op();
-  return VFS_OK;
+    vfs_end_op();
+    return VFS_OK;
 }
 
 /**
@@ -700,41 +722,41 @@ int vfs_seek(openfile_t file, int seek_position)
  */
 int vfs_read(openfile_t file, void *buffer, int bufsize)
 {
-  openfile_entry_t *openfile;
-  fs_t *fs;
-  int fileid, seek_position, ret;
+    openfile_entry_t *openfile;
+    fs_t *fs;
+    int fileid, seek_position, ret;
 
-  if (bufsize < 0 || buffer == NULL) {
-    return VFS_INVALID_PARAMS;
-  }
+    if (bufsize < 0 || buffer == NULL) {
+        return VFS_INVALID_PARAMS;
+    }
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  semaphore_P(openfile_table.sem);
-
-  openfile = vfs_verify_open(file);
-  if (openfile == NULL) {
-    semaphore_V(openfile_table.sem);
-    return VFS_NOT_OPEN;
-  }
-
-  fs = openfile->filesystem;
-  fileid = openfile->fileid;
-  seek_position = openfile->seek_position;
-
-  semaphore_V(openfile_table.sem);
-
-  ret = fs->read(fs, fileid, buffer, bufsize, seek_position);
-
-  if(ret > 0) {
     semaphore_P(openfile_table.sem);
-    openfile->seek_position += ret;
-    semaphore_V(openfile_table.sem);
-  }
 
-  vfs_end_op();
-  return ret;
+    openfile = vfs_verify_open(file);
+    if (openfile == NULL) {
+        semaphore_V(openfile_table.sem);
+        return VFS_NOT_OPEN;
+    }
+
+    fs = openfile->filesystem;
+    fileid = openfile->fileid;
+    seek_position = openfile->seek_position;
+
+    semaphore_V(openfile_table.sem);
+
+    ret = fs->read(fs, fileid, buffer, bufsize, seek_position);
+
+    if(ret > 0) {
+        semaphore_P(openfile_table.sem);
+        openfile->seek_position += ret;
+        semaphore_V(openfile_table.sem);
+    }
+
+    vfs_end_op();
+    return ret;
 }
 
 /**
@@ -754,41 +776,41 @@ int vfs_read(openfile_t file, void *buffer, int bufsize)
  */
 int vfs_write(openfile_t file, void *buffer, int datasize)
 {
-  openfile_entry_t *openfile;
-  fs_t *fs;
-  int fileid, seek_position, ret;
+    openfile_entry_t *openfile;
+    fs_t *fs;
+    int fileid, seek_position, ret;
 
-  if (datasize < 0 || buffer == NULL) {
-    return VFS_INVALID_PARAMS;
-  }
+    if (datasize < 0 || buffer == NULL) {
+        return VFS_INVALID_PARAMS;
+    }
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  semaphore_P(openfile_table.sem);
-
-  openfile = vfs_verify_open(file);
-  if (openfile == NULL) {
-    semaphore_V(openfile_table.sem);
-    return VFS_NOT_OPEN;
-  }
-
-  fs = openfile->filesystem;
-  fileid = openfile->fileid;
-  seek_position = openfile->seek_position;
-
-  semaphore_V(openfile_table.sem);
-
-  ret = fs->write(fs, fileid, buffer, datasize, seek_position);
-
-  if(ret > 0) {
     semaphore_P(openfile_table.sem);
-    openfile->seek_position += ret;
-    semaphore_V(openfile_table.sem);
-  }
 
-  vfs_end_op();
-  return ret;
+    openfile = vfs_verify_open(file);
+    if (openfile == NULL) {
+        semaphore_V(openfile_table.sem);
+        return VFS_NOT_OPEN;
+    }
+
+    fs = openfile->filesystem;
+    fileid = openfile->fileid;
+    seek_position = openfile->seek_position;
+
+    semaphore_V(openfile_table.sem);
+
+    ret = fs->write(fs, fileid, buffer, datasize, seek_position);
+
+    if(ret > 0) {
+        semaphore_P(openfile_table.sem);
+        openfile->seek_position += ret;
+        semaphore_V(openfile_table.sem);
+    }
+
+    vfs_end_op();
+    return ret;
 }
 
 /**
@@ -803,39 +825,39 @@ int vfs_write(openfile_t file, void *buffer, int datasize)
  */
 int vfs_create(const char *pathname, int size)
 {
-  char volumename[VFS_NAME_LENGTH];
-  char filename[VFS_NAME_LENGTH];
-  fs_t *fs = NULL;
-  int ret;
+    char volumename[VFS_NAME_LENGTH];
+    char filename[VFS_NAME_LENGTH];
+    fs_t *fs = NULL;
+    int ret;
 
-  if (size < 0) {
-    return VFS_INVALID_PARAMS;
-  }
+    if (size < 0) {
+        return VFS_INVALID_PARAMS;
+    }
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  if(vfs_parse_pathname(pathname, volumename, filename) != VFS_OK) {
-    vfs_end_op();
-    return VFS_INVALID_PARAMS;
-  }
+    if(vfs_parse_pathname(pathname, volumename, filename) != VFS_OK) {
+        vfs_end_op();
+        return VFS_INVALID_PARAMS;
+    }
 
-  semaphore_P(vfs_table.sem);
+    semaphore_P(vfs_table.sem);
 
-  fs = vfs_get_filesystem(volumename);
+    fs = vfs_get_filesystem(volumename);
 
-  if(fs == NULL) {
+    if(fs == NULL) {
+        semaphore_V(vfs_table.sem);
+        vfs_end_op();
+        return VFS_NO_SUCH_FS;
+    }
+
+    ret = fs->create(fs, filename, size);
+
     semaphore_V(vfs_table.sem);
+
     vfs_end_op();
-    return VFS_NO_SUCH_FS;
-  }
-
-  ret = fs->create(fs, filename, size);
-
-  semaphore_V(vfs_table.sem);
-
-  vfs_end_op();
-  return ret;
+    return ret;
 }
 
 /**
@@ -848,35 +870,35 @@ int vfs_create(const char *pathname, int size)
  */
 int vfs_remove(const char *pathname)
 {
-  char volumename[VFS_NAME_LENGTH];
-  char filename[VFS_NAME_LENGTH];
-  fs_t *fs = NULL;
-  int ret;
+    char volumename[VFS_NAME_LENGTH];
+    char filename[VFS_NAME_LENGTH];
+    fs_t *fs = NULL;
+    int ret;
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  if (vfs_parse_pathname(pathname, volumename, filename) != VFS_OK) {
-    vfs_end_op();
-    return VFS_INVALID_PARAMS;
-  }
+    if (vfs_parse_pathname(pathname, volumename, filename) != VFS_OK) {
+        vfs_end_op();
+        return VFS_INVALID_PARAMS;
+    }
 
-  semaphore_P(vfs_table.sem);
+    semaphore_P(vfs_table.sem);
 
-  fs = vfs_get_filesystem(volumename);
+    fs = vfs_get_filesystem(volumename);
 
-  if(fs == NULL) {
+    if(fs == NULL) {
+        semaphore_V(vfs_table.sem);
+        vfs_end_op();
+        return VFS_NO_SUCH_FS;
+    }
+
+    ret = fs->remove(fs, filename);
+
     semaphore_V(vfs_table.sem);
+
     vfs_end_op();
-    return VFS_NO_SUCH_FS;
-  }
-
-  ret = fs->remove(fs, filename);
-
-  semaphore_V(vfs_table.sem);
-
-  vfs_end_op();
-  return ret;
+    return ret;
 }
 
 /**
@@ -890,28 +912,28 @@ int vfs_remove(const char *pathname)
  */
 int vfs_getfree(const char *filesystem)
 {
-  fs_t *fs = NULL;
-  int ret;
+    fs_t *fs = NULL;
+    int ret;
 
-  if (vfs_start_op() != VFS_OK)
-    return VFS_UNUSABLE;
+    if (vfs_start_op() != VFS_OK)
+        return VFS_UNUSABLE;
 
-  semaphore_P(vfs_table.sem);
+    semaphore_P(vfs_table.sem);
 
-  fs = vfs_get_filesystem(filesystem);
+    fs = vfs_get_filesystem(filesystem);
 
-  if(fs == NULL) {
+    if(fs == NULL) {
+        semaphore_V(vfs_table.sem);
+        vfs_end_op();
+        return VFS_NO_SUCH_FS;
+    }
+
+    ret = fs->getfree(fs);
+
     semaphore_V(vfs_table.sem);
+
     vfs_end_op();
-    return VFS_NO_SUCH_FS;
-  }
-
-  ret = fs->getfree(fs);
-
-  semaphore_V(vfs_table.sem);
-
-  vfs_end_op();
-  return ret;
+    return ret;
 }
 
 /** @} */

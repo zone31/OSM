@@ -21,13 +21,19 @@ int main()
 
     printf("open returned %d\n", ret_val);
 
+    int i;
+    for (i = 0; i<127;i++){
+        ret_val = syscall_write(filehandle,(void *) "#",1);
+    }
+    syscall_seek(filehandle,0);
+
     /* Write to the file. */
     ret_val = syscall_write(filehandle, (void *) write_this, 11);
 
     printf("write returned %d\n", ret_val);
 
     /* Change position in file. */
-    ret_val = syscall_seek(filehandle, 20);
+    ret_val = syscall_seek(filehandle, 50);
 
     printf("seek returned %d\n", ret_val);
 
@@ -40,12 +46,18 @@ int main()
     /* Write to file. */
     ret_val = syscall_write(filehandle, (void *) masterrace, 13);
 
-    /* Read the file. */
-    ret_val = syscall_read(filehandle, read_buf, 128);
+    printf("tell: %d\n",syscall_tell(filehandle));
 
+    /* Read the file. */
+    ret_val = syscall_seek(filehandle, 0);
+    ret_val = syscall_read(filehandle, read_buf, 128);
+    printf("ret_val %d\n",ret_val);
+
+    printf("tell: %d\n",syscall_tell(filehandle));
     printf("read %s\n", read_buf);
 
     /* Close the filehandle. */
+    printf("tell: %d\n",syscall_tell(filehandle));
     ret_val = syscall_close(filehandle);
 
     printf("close returned %d\n", ret_val);

@@ -149,6 +149,7 @@ int vfs_seek(openfile_t file, int seek_position);
 int vfs_read(openfile_t file, void *buffer, int bufsize);
 int vfs_write(openfile_t file, void *buffer, int datasize);
 
+int vfs_tell(openfile_t fs);
 int vfs_create(const char *pathname, int size);
 int vfs_remove(const char *pathname);
 int vfs_getfree(const char *filesystem);

@@ -41,86 +41,86 @@
 
 gcd_t* get_tty(void)
 {
-  device_t *dev;
-  gcd_t *gcd;
+    device_t *dev;
+    gcd_t *gcd;
 
-  /* Find system console (first tty) */
-  dev = device_get(YAMS_TYPECODE_TTY, 0);
-  if (dev == NULL) {
-    return NULL;
-  }
-  gcd = (gcd_t *)dev->generic_device;
-  if (gcd == NULL) {
-    return NULL;
-  }
-  return gcd;
+    /* Find system console (first tty) */
+    dev = device_get(YAMS_TYPECODE_TTY, 0);
+    if (dev == NULL) {
+        return NULL;
+    }
+    gcd = (gcd_t *)dev->generic_device;
+    if (gcd == NULL) {
+        return NULL;
+    }
+    return gcd;
 }
 
 int tty_read(void* buffer, int length)
 {
-  gcd_t *gcd;
+    gcd_t *gcd;
 
-  gcd = get_tty();
-  if (gcd == NULL) {
-    return VFS_ERROR;
-  }
-  return gcd->read(gcd, buffer, length);
+    gcd = get_tty();
+    if (gcd == NULL) {
+        return VFS_ERROR;
+    }
+    return gcd->read(gcd, buffer, length);
 }
 
 int tty_write_stdout(void* buffer, int length)
 {
-  gcd_t *gcd;
+    gcd_t *gcd;
 
-  gcd = get_tty();
-  if (gcd == NULL) {
-    return VFS_ERROR;
-  }
-  return gcd->write(gcd, buffer, length);
+    gcd = get_tty();
+    if (gcd == NULL) {
+        return VFS_ERROR;
+    }
+    return gcd->write(gcd, buffer, length);
 }
 
 /* Assumes gcd != NULL. */
 int tty_set_red(gcd_t* gcd)
 {
-  static const char red[7] = "\x1b[31;1m";
+    static const char red[7] = "\x1b[31;1m";
 
-  if (gcd->write(gcd, red, 7) != 7) {
-    return VFS_ERROR;
-  }
-  return VFS_OK;
+    if (gcd->write(gcd, red, 7) != 7) {
+        return VFS_ERROR;
+    }
+    return VFS_OK;
 }
 
 /* Assumes gcd != NULL. */
 int tty_reset_red(gcd_t* gcd)
 {
-  static const char reset[4] = "\x1b[0m";
+    static const char reset[4] = "\x1b[0m";
 
-  if (gcd->write(gcd, reset, 4) != 4) {
-    return VFS_ERROR;
-  }
-  return VFS_OK;
+    if (gcd->write(gcd, reset, 4) != 4) {
+        return VFS_ERROR;
+    }
+    return VFS_OK;
 }
 
 int tty_write_stderr(void* buffer, int length)
 {
-  gcd_t *gcd;
-  int res;
+    gcd_t *gcd;
+    int res;
 
-  gcd = get_tty();
-  if (gcd == NULL) {
-    return VFS_ERROR;
-  }
+    gcd = get_tty();
+    if (gcd == NULL) {
+        return VFS_ERROR;
+    }
 
-  if (tty_set_red(gcd) != VFS_OK) {
-    return VFS_ERROR;
-  }
+    if (tty_set_red(gcd) != VFS_OK) {
+        return VFS_ERROR;
+    }
 
-  res = gcd->write(gcd, buffer, length);
+    res = gcd->write(gcd, buffer, length);
 
-  if (tty_reset_red(gcd) != VFS_OK) {
-    return VFS_ERROR;
-  }
+    if (tty_reset_red(gcd) != VFS_OK) {
+        return VFS_ERROR;
+    }
 
-  return res;
+    return res;
 }
 
 /**
@@ -134,24 +134,24 @@ int tty_write_stderr(void* buffer, int length)
  */
 int io_read(int filehandle, void* buffer, int length)
 {
-  int res;
+    int res;
+    switch(filehandle) {
+        case FILEHANDLE_STDIN:
+            res = tty_read(buffer, length);
+            break;
 
-  switch(filehandle) {
+        case FILEHANDLE_STDOUT:
+        case FILEHANDLE_STDERR:
+            res = VFS_INVALID_PARAMS;
+            break;
 
-  case FILEHANDLE_STDIN:
-    res = tty_read(buffer, length);
+        default:
+            // TODO: Add support for other file handles.
+            res = vfs_read(filehandle, buffer, length);
+            break;
+    }
 
-  case FILEHANDLE_STDOUT:
-  case FILEHANDLE_STDERR:
-    res = VFS_INVALID_PARAMS;
-    break;
-
-  default:
-    // TODO: Add support for other file handles.
-    res = vfs_read(filehandle, buffer, length);
-  }
-
-  return res;
+    return res;
 }
 
 /**
@@ -163,28 +163,28 @@ int io_read(int filehandle, void* buffer, int length)
  */
 int io_write(int filehandle, void* buffer, int length)
 {
-  int res;
+    int res;
 
-  switch(filehandle) {
+    switch(filehandle) {
 
-  case FILEHANDLE_STDIN:
-    res = VFS_INVALID_PARAMS;
-    break;
+        case FILEHANDLE_STDIN:
+            res = VFS_INVALID_PARAMS;
+            break;
 
-  case FILEHANDLE_STDOUT:
-    res = tty_write_stdout(buffer, length);
-    break;
+        case FILEHANDLE_STDOUT:
+            res = tty_write_stdout(buffer, length);
+            break;
 
-  case FILEHANDLE_STDERR:
-    res = tty_write_stderr(buffer, length);
-    break;
+        case FILEHANDLE_STDERR:
+            res = tty_write_stderr(buffer, length);
+            break;
 
-  default:
-    // TODO: Add support for other file handles.
-    res = vfs_write(filehandle, buffer, length);
-  }
+        default:
+            // TODO: Add support for other file handles.
+            res = vfs_write(filehandle, buffer, length);
+    }
 
-  return res;
+    return res;
 }
 
 /** @} */

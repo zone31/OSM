@@ -131,6 +131,9 @@ void syscall_handle(context_t *user_context)
         case SYSCALL_SEEK:
             V0 = vfs_seek((int) A1, (int) A2);
             break;
+        case SYSCALL_TELL:
+            V0 = vfs_tell((int) A1);
+            break;
         case SYSCALL_REMOVE:
             V0 = vfs_remove((char const *) A1);
             break;

@@ -155,6 +155,10 @@ int syscall_open(const char *filename)
 /* Close the open file identified by 'filehandle'. Zero will be returned
  * success, other values indicate errors. 
  */
+int syscall_tell(int filehandle)
+{
+    return (int)_syscall(SYSCALL_TELL, (uint32_t)filehandle, 0, 0);
+}
 int syscall_close(int filehandle)
 {
     return (int)_syscall(SYSCALL_CLOSE, (uint32_t)filehandle, 0, 0);
