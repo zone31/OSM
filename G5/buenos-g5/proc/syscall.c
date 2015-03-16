@@ -111,10 +111,28 @@ void syscall_handle(context_t *user_context)
             V0 = vfs_open((const char *) A1);
             break;
         case SYSCALL_WRITE:
-            V0 = vfs_write((int) A1, (void *) A2, (int) A3);
+            V0 = io_write((int) A1, (void *) A2, (int) A3);
+            // if ((int) A1 == FILEHANDLE_STDOUT) {
+            //     V0 = io_write((int) A1, (void *) A2, (int) A3);
+            // } else {
+            //     V0 = vfs_write((int) A1, (void *) A2, (int) A3);
+            // }
+            break;
+        case SYSCALL_READ:
+            V0 = io_read((int) A1, (void *) A2, (int) A3);
             break;
         case SYSCALL_CREATE:
+            // V0 = io_read((const char *) A1, (int) A2);
             V0 = vfs_create((const char *) A1, (int) A2);
+            break;
+        case SYSCALL_CLOSE:
+            V0 = vfs_close((int) A1);
+            break;
+        case SYSCALL_SEEK:
+            V0 = vfs_seek((int) A1, (int) A2);
+            break;
+        case SYSCALL_REMOVE:
+            V0 = vfs_remove((char const *) A1);
             break;
         default:
                 KERNEL_PANIC("Unhandled system call\n");

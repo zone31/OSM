@@ -135,6 +135,10 @@ void vfs_init(void)
     openfile_table.files[i].filesystem = NULL;
   }
 
+  for (i = 0; i < 3; i++) {
+    openfile_table.files[i].filesystem = (fs_t *) 1;
+  }
+
   vfs_op_sem = semaphore_create(1);
   vfs_unmount_sem = semaphore_create(0);
 
@@ -191,7 +195,7 @@ void vfs_deinit(void)
 
 /**
  * Attempts to mount given disk with given mount-point (volumename).
- * All filesystems defined in filesystems.c are attempted in 
+ * All filesystems defined in filesystems.c are attempted in
  * order and first match is used.
  *
  * @param disk Generic Block Device on which some filesystem should be.
@@ -297,7 +301,7 @@ static fs_t *vfs_get_filesystem(const char *mountpoint)
  *
  * @param volumebuf Buffer of at least VFS_NAME_LENGTH bytes long
  * where the volume name will be stored.
- * 
+ *
  * @param filenamebuf Buffer of at least VFS_NAME_LENGTH bytes long
  * where the file name will be stored.
  *
@@ -399,7 +403,7 @@ static void vfs_end_op()
  *
  * @param name Name of the mountpoint where the filesystem should be
  * mounted.
- * 
+ *
  * @return VFS_LIMIT if too many filesystems are mounted, VFS_ERROR if
  * double mounting is attempted with the same name or VFS_OK if the
  * mount succeeded.
@@ -533,12 +537,14 @@ openfile_t vfs_open(const char *pathname)
   semaphore_P(openfile_table.sem);
 
   for(file=0; file<CONFIG_MAX_OPEN_FILES; file++) {
+    kprintf("looking at file %d\n", file);
     if(openfile_table.files[file].filesystem == NULL) {
       break;
     }
   }
 
   if(file >= CONFIG_MAX_OPEN_FILES) {
+    kprintf("file is greater than MAX\n");
     semaphore_V(openfile_table.sem);
     semaphore_V(vfs_table.sem);
     kprintf("VFS: Warning, maximum number of open files exceeded.");
