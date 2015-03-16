@@ -1,0 +1,6 @@
+\section{Task 2}
+In this task we were asked to implement a better filesystem than the simple one
+that was shipped with Buenos.  When we create a file in Buenos we have to know
+its size beforehand, the filesystem can't itself expand a file naturally as it
+is written.  We were asked to implement a function that allocates more space on
+the filesystem if a write goes over the bound of the maximum filelength.
