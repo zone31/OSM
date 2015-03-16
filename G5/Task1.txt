@@ -1,0 +1,17 @@
+\subsection{syscall create}
+syscall_create registers a file on the disk with the specified file size. The file can then be opened, written to and read from by the syscalls described in this section.
+The syscall is implemented by calling the vfs_create function defined by the virtual filesystem in the kernel.
+
+\subsection{syscall seek}
+syscall_seek changes the offset to read and write from for a filehandle.
+The syscall is implemented, by finding the filehandle and acquire a semaphore lock. Then the seek_position variable is changed to the absolute postion defined in the parameter to the function. The semphore is released before the function returns.
+
+___tell___
+
+\subsection{syscall read}
+syscall_read reads a series of bytes from a filehandle into a buffer. To avoid reading more than expected (causing an unhandled buffer overflow), a length is defnied as parameter.
+The read syscall is handled by sorting out, what kind of read is needed. The function io_read determines if the filehandle is STDIN or a file. In case of TTY, the tty_read_stdin call is used, otherwise vfs_write is called.
+
+\subsection{syscall write}
+syscall_write writes a series of bytes to a filehandle from a buffer. To avoid writing longer than expected (causing an unhandled buffer overflow), a length is defined as parameter.
+The write syscall is handled by sorting out, what kind of write is needed. The function io_write determines if the filehandle is STDOUT, STDERR or a file. In case of TTY, the tty_write_stdout and tty_write_stderr calls are used, otherwise vfs_write is called.
